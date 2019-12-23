@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Softnet POS System</title>
+    <script src="https://kit.fontawesome.com/3a94120502.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
     <style>
         a { cursor: pointer; }
@@ -14,8 +15,56 @@
             background: #d8d8d8 !important;
             cursor: pointer;
         }
-        .contenedorproductos{
-            max-height: 1px;
+        .contenedor-productos{
+            max-height: 200px;
+            overflow: scroll;
+            border: 1px solid #929292;
+    padding: 8px 15px;
+    border-radius: 10px;
+        }
+        ul{
+            list-style: none;
+        }
+        .carrito p{
+            font-size: 14px;
+            margin:0px;
+            font-weight: 400;
+            display: inline-block;
+            vertical-align: middle;
+            text-align: left;
+            max-width: 72%;
+        }
+        .carrito b {
+            text-align: right;
+    display: inherit;
+    float: right;
+        }
+        .carrito i {
+            display: inline-block;
+            vertical-align: middle;
+            color:#e00606;
+            font-size: 18px;
+        }
+        .productos-unitario {
+            padding-bottom: 5px;
+    border-bottom: 2px dashed #cacaca;
+    margin-bottom: 5px;
+        }
+        .btn-sucess {
+            width: 100%;
+    padding: 14px;
+    background: #31b931;
+    color: white;
+    border-bottom: 3px solid #129e12;
+        }
+
+        p.clear {
+            clear: both;
+        }
+        .col-medium {
+            width: 50%;
+            display: inline-block;
+            margin-bottom: 15px;
         }
     </style>
 </head>
