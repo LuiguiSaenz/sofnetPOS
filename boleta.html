@@ -1,0 +1,136 @@
+<EB>
+
+    [LAYOUT]
+    
+    <div style="font-weight:normal;text-align:center;font-size:13px">
+    
+    <C10>RESTAURANT NAME
+    
+    <L00>P.O. Box 1234 - 00100
+    
+    <L00>NAIROBI KENYA
+    
+    <L00>TEL   : 123456789
+    
+    -- General layout
+    
+    <T>Ticket
+    
+    {ENTITIES}              <L00>RECEIPT#:{TICKET TAG:Order No}  
+    
+    <F>-
+    
+    {ORDERS}
+    
+    <F>=
+    
+    {DISCOUNTS}
+    
+    {TAXES}
+    
+    <F>-
+    
+    [<J10>Total Gift:|{ORDER STATE TOTAL:Gift}]
+    
+    <EB>
+    
+    <J10>GRAND TOTAL:|{TICKET TOTAL}
+    
+    <DB>
+    
+    {PAYMENTS}
+    
+    <F>=
+    
+    <J00>STAFF NAME:{SETTING:CURRENTUSER}
+    
+    <L00>Date:{TICKET DATE}      <L00>Time:{TIME}
+    
+    <DB>
+    
+    <F>=
+    
+    <div style="font-size:13px;text-align:center;font-family:'Tahoma'">ASANTE SANA</div>
+    
+    </div>
+    
+    
+    
+    [DISCOUNTS]
+    
+    <J00>{CALCULATION NAME} %{CALCULATION AMOUNT}|{CALCULATION TOTAL}
+    
+    
+    
+    [PAYMENTS]
+    
+    <J00>PAID BY:{PAYMENT NAME}|KSh:{TENDERED TOTAL}
+    
+    [<J00>CHANGE:|{CHANGE TOTAL}]
+    
+    
+    
+    
+    
+    [ORDERS]
+    
+    -- Default format for orders
+    
+    <J00>-{QUANTITY} {NAME}|{TOTAL PRICE}
+    
+    {ORDER TAGS}
+    
+    
+    
+    [ORDERS:Gift]
+    
+    -- Format for gifted orders
+    
+    <J00>- {QUANTITY} {NAME}|**GIFT**
+    
+    {ORDER TAGS}
+    
+    
+    
+    [ORDERS:Void]
+    
+    -- Nothing will print for void lines
+    
+    
+    
+    [ORDER TAGS]
+    
+    -- Format for order tags
+    
+    <J00> * {ORDER TAG NAME} | {ORDER TAG PRICE}
+    
+    
+    
+    [ENTITIES:Table]
+    
+    -- Table entity format
+    
+    <L00>Table: {ENTITY NAME}
+    
+    
+    
+    [ENTITIES:Customer]
+    
+    -- Customer entity format
+    
+    <J00>Customer: {ENTITY NAME} | {ENTITY DATA:Phone}
+    
+    [TAXES]
+    
+    <J00>{TAX NAME}:|{TAX AMOUNT}
+    
+        created
+        Sep '15
+        last reply
+        Sep '15
+        1
+        reply
+        3.9k
+        views
+        2
+        users

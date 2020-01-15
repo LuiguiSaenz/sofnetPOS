@@ -1,12 +1,82 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-
+import ReactToPrint from 'react-to-print';
 
 const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0
   })
+
+
+  class ComponentToPrint extends React.Component {
+
+    mostrarCarrito(){
+        if(this.props.carrito.length === 0){
+            return <h4>Sin productos en carrito</h4>
+        }
+
+        return(
+                
+                this.props.carrito.map((pro, i) => {
+                    return <tr key={i} >
+                        <td><p id={i}>1 {pro.nombre}  </p></td><td className="tdright"><p>{formatter.format(pro.precio)} </p></td>
+                        </tr>
+                })
+
+        )
+    }
+
+    render() {
+
+        let totalidad = this.props.carrito.reduce((prev, cur) => prev+parseInt(cur.precio), 0);
+        let final = totalidad -  ( totalidad * parseInt(this.props.descuento) / 100);
+        let descuentofinal = totalidad * this.props.descuento / 100;
+
+      let tiempo = this.props.tiempo;
+
+      return (
+          <div>
+
+              <div className="encabezadoboleta">
+                  
+                  <h4>{this.props.datosempresa.razon} </h4>
+                  <p>{this.props.datosempresa.direccion} </p>
+                  <p><b>RUT:</b> {this.props.datosempresa.rut_empresa} </p>
+                  <p><b>GIRO:</b> {this.props.datosempresa.giro1} </p>
+                  <p><b>FECHA:</b> {tiempo} </p>
+              </div>
+              <h4>COMPROBANTE DE VENTA</h4>
+        <table>
+          <thead>
+            <th>PRODUCTO</th>
+            <th className="tdright">PRECIO UNIDAD</th>
+     
+          </thead>
+          <tbody style={{borderTop: '1px solid black'}}>
+            {this.mostrarCarrito()}
+            <tr style={{borderTop: '1px solid black'}}>
+                <td><p>SUBTOTAL</p></td>
+                <td className="tdright">{ formatter.format(totalidad) } </td>
+            </tr>
+            <tr>
+                <td><p>DESCUENTO</p></td>
+                <td className="tdright">{formatter.format(descuentofinal)} </td>
+            </tr>
+            <tr>
+                <td><p>TOTAL</p></td>
+                <td className="tdright">{ formatter.format(final) }</td>
+            </tr>
+            <tr>
+                <td><p>TIPO DE PAGO</p></td>
+                <td className="tdright"><p className="uppercase">{this.props.tipopago} </p></td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      );
+    }
+  }
 
 class HomePage extends React.Component {
     constructor(props) {
@@ -19,24 +89,53 @@ class HomePage extends React.Component {
             descuento: 0,
             montofinal: 0,
             cola: JSON.parse(localStorage.getItem('cola')),
-            efectivo: 0
+            efectivo: 0,
+            tipopago: "efectivo",
+            datosempresa: "",
+            curtime: new Date().toLocaleString(),
+            token: JSON.parse(localStorage.getItem('user'))
         };
 
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
+    getDatosEmpresa(token){
+
+        return fetch('http://apitest.softnet.cl/datoEmpresa', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'token': token
+            }
+        })
+        .then(datosempresa => datosempresa.json())
+        .then(datosempresa => {
+
+            localStorage.setItem('business', JSON.stringify(datosempresa[0]));
+            this.setState({ datosempresa: datosempresa[0] })
+        })
+        .catch(error => {
+            console.log(error);
+        });
+    }
+    
     getProductos(token) {
         this.setState({loading: true})
-        return fetch('https://webhooks.mongodb-stitch.com/api/client/v2.0/app/restaurants-tkppo/service/POS/incoming_webhook/productos', {
-            method: 'GET'
+        return fetch('http://api.softnet.cl/productos', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'token': token
+            }
         })
         .then(pros => pros.json())
         .then(pros => {
+            console.log(pros)
             localStorage.setItem('productos', JSON.stringify(pros));
             this.setState({ productos: pros, loading: false })
         })
         .catch(error => {
-           // console.log(error);
+           console.log(error);
         });
     }
 
@@ -78,10 +177,24 @@ class HomePage extends React.Component {
     componentDidMount() {
         let user = JSON.parse(localStorage.getItem('user'));
         this.getProductos(user.token);
+        this.getDatosEmpresa(user.token);
+        setInterval( () => {
+            this.setState({
+              curtime : new Date().toLocaleString()
+            })
+          },1000);
+
+          
     }
 
     handleChange = event => {
         this.setState({ filter: event.target.value });
+      };
+
+
+      handleTipoPago = event => {
+        let tipofinal = event.target.value;
+        this.setState({ tipopago: tipofinal });
       };
 
       handleVuelto = event => {
@@ -95,28 +208,66 @@ class HomePage extends React.Component {
 
     handleSubmit = event => {
 
+        
         event.preventDefault();
         let totalidad = this.state.carrito.reduce((prev, cur) => prev+parseInt(cur.precio), 0);
         let final = totalidad -  ( totalidad * parseInt(this.state.descuento) / 100);
+        let detalle = this.state.carrito;
+        detalle.forEach((obj) => obj.Descuento = "0");
+        detalle.forEach((obj) => obj.Cantidad = "1");
+        detalle.forEach((obj) => obj.Bodega = "1989");
+        detalle.forEach((obj) => obj.Afecto = false);
+        let enviarBoleta = [
+            {
+            "Encabezado": {
+            "Receptor": "66666666-6",
+            "MontoNeto": final,
+            "Descuento": this.state.descuento,
+            "TipoDocumento": "39",
+            "AreaNegocio": "3609",
+            "Observacion": "observacion",
+            "Direccion": "123"
+            },
+            "Detalle": detalle,
+            "Adicional": {
+            "Uno": "4131",
+            "Dos": "11111111-1",
+            "Treinta": "123"
+            }
+            }
+            ];
 
+            console.log(enviarBoleta);
+
+            let token = this.state.token.token;
+
+            console.log(token)
+
+            /*
         let enviarBoleta = {
             carrito: this.state.carrito,
             descuento: this.state.descuento,
             total: final
         }
+        */
         
-        fetch('https://webhooks.mongodb-stitch.com/api/client/v2.0/app/restaurants-tkppo/service/POS/incoming_webhook/productos', {
-            method: 'GET'
+        fetch('http://api.softnet.cl/boleta', {
+            method: 'POST',
+            headers: {    
+            'Content-Type': 'application/x-www-form-urlencoded', 
+            'token': token  
+        },
+            body: JSON.stringify({ enviarBoleta })
         })
         .then(pros => pros.json())
         .then(pros => {
             
-
+        console.log(pros)
         ///// REINICIAR CARRITO ///////
 
+        this.inputElement.click();
         this.setState({carrito: []});
         localStorage.setItem('carrito', JSON.stringify(this.state.carrito));
-
 
         })
         .catch(error => {
@@ -128,9 +279,10 @@ class HomePage extends React.Component {
 
         ///// REINICIAR CARRITO ///////
 
+        
+        this.inputElement.click();
         this.setState({carrito: []});
         localStorage.setItem('carrito', JSON.stringify(this.state.carrito));
-
         });
         
       }
@@ -165,28 +317,30 @@ class HomePage extends React.Component {
             <div className="row">
 <form onSubmit={this.handleSubmit}>
 <div className="col-md-6 col-md-6">
-<h2 className="titulocart">CARRITO</h2>
+<h2 className="titulocart">CARRITO</h2><Link style={{ float: "right", marginTop: -35}} to="/login">Salir</Link>
+
 <h4 className="contadorcart">{this.state.carrito.length} Productos</h4>
 <p className="clear"></p>
                 {this.mostrarCarrito()}
             </div>
             <div className="col-md-6 col-md-6">
-                <h2>PRODUCTOS </h2>
+                <h2>PRODUCTOS { JSON.stringify(this.state.prueba) } </h2>
                 <input placeholder="BUSCAR PRODUCTOS" className="form-control" value={filter} onChange={this.handleChange} />
                 <div className="contenedor-productos">
                 {productosFiltrados.map((info, i) => {
-            return <div className="boxproducto" key={i} onClick={() => this.agregarCarrito(info)} key={i}><h4 className="left" > {info.nombre} </h4> <h4 className="right">{formatter.format(info.precio)} </h4></div>;
+            return <div className="boxproducto" key={i} onClick={() => this.agregarCarrito(info)} key={i}><h4 className="left" > {info.nombre} </h4><p className="hide">{info.codigo} </p> <h4 className="right">{formatter.format(info.precio)} </h4></div>;
         })}
         </div>
 
         <h3>TOTAL: {formatter.format(final)}</h3>
         <div className="form-group"> 
         <label className="form-label">TIPO DE PAGO</label>
-        <select className="form-control">
+        <select className="form-control" onChange={this.handleTipoPago}>
                 <option value="efectivo">EFECTIVO</option>
                 <option value="debito">DEBITO</option>
                 <option value="credito">CRÉDITO</option>
         </select>
+
         </div>
 
         <div className="form-group"> 
@@ -200,7 +354,7 @@ class HomePage extends React.Component {
 
         <div className="form-group"> 
         <label className="form-label">DESCUENTO - Porcentaje</label>
-        <input placeholder="DESCUENTO" className="form-control" onChange={this.handleDescuento} />
+        <input placeholder= "DESCUENTO" className="form-control" onChange={this.handleDescuento} />
         </div>
 
 
@@ -213,14 +367,16 @@ class HomePage extends React.Component {
             <label className="form-label">Vuelto</label>
             <input placeholder="VUELTO" className="form-control" value={formatter.format(vuelto)} />
         </div>
-    
-    
         <input className="btn btn-sucess" type="submit" value="FINALIZAR Y PAGAR" />
-                <p>
-                    <Link to="/login">Salir</Link>
-                </p>
+                
             </div>
             </form>
+
+            <ReactToPrint
+          trigger={() => <a ref={input => this.inputElement = input} className="hide" href="javascript:void(0)">IMPRIMIR</a>}
+          content={() => this.componentRef}
+        />
+        <ComponentToPrint tiempo={this.state.curtime} datosempresa={this.state.datosempresa} tipopago={this.state.tipopago} descuento={this.state.descuento} carrito={this.state.carrito} ref={el => (this.componentRef = el)} />
             </div>
         );
     }
