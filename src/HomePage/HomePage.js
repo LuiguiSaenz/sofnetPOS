@@ -129,7 +129,7 @@ class HomePage extends React.Component {
     }
 
     getProductos(token) {
-        return fetch('http://localhost:8000/producto', {
+        return fetch('http://api.softnet.cl/producto', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -149,7 +149,7 @@ class HomePage extends React.Component {
 
 
     getBodega(token) {
-        return fetch('http://localhost:8000/bodega', {
+        return fetch('http://api.softnet.cl/bodega', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -166,7 +166,7 @@ class HomePage extends React.Component {
     }
 
     getTipoPago(token) {
-        return fetch('http://localhost:8000/formaPago', {
+        return fetch('http://api.softnet.cl/formaPago', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -183,7 +183,7 @@ class HomePage extends React.Component {
     }
 
     getVendedores(token) {
-        return fetch('http://localhost:8000/vendedores', {
+        return fetch('http://api.softnet.cl/vendedores', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -200,7 +200,7 @@ class HomePage extends React.Component {
     }
 
     getAreaNegocio(token) {
-        return fetch('http://localhost:8000/areaNegocio', {
+        return fetch('http://api.softnet.cl/areaNegocio', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -333,7 +333,16 @@ class HomePage extends React.Component {
 
         let token = this.state.token.token;
 
-        fetch('http://localhost:8000/boleta', {
+
+        /*
+    let enviarBoleta = {
+        carrito: this.state.carrito,
+        descuento: this.state.descuento,
+        total: final
+    }
+    */
+
+        fetch('http://api.softnet.cl/boleta', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
