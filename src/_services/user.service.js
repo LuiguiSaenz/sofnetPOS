@@ -10,11 +10,7 @@ function login(username, password, rut) {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: JSON.stringify({ username, password, rut })
-    }; 
-
-
-
-    
+    };
 
     return fetch(`http://api.softnet.cl/login`, requestOptions)
         .then(user => user.json())
@@ -26,9 +22,11 @@ function login(username, password, rut) {
                 localStorage.setItem('user', JSON.stringify(user));
                 localStorage.setItem('carrito', JSON.stringify([]));
                 localStorage.setItem('cola', JSON.stringify([]));
+
+                return user;
             }
 
-            return user;
+            return false;
         });
 }
 
