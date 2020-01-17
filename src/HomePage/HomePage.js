@@ -349,7 +349,7 @@ class HomePage extends React.Component {
                 this.inputElement.click();
                 this.setState({ carrito: [] });
                 localStorage.setItem('carrito', JSON.stringify(this.state.carrito));
-                npm
+
             })
             .catch(error => {
 
