@@ -129,7 +129,7 @@ class HomePage extends React.Component {
     }
 
     getProductos(token) {
-        return fetch('http://api.softnet.cl/producto', {
+        return fetch('http://localhost:8000/producto', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -149,7 +149,7 @@ class HomePage extends React.Component {
 
 
     getBodega(token) {
-        return fetch('http://api.softnet.cl/bodega', {
+        return fetch('http://localhost:8000/bodega', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -166,7 +166,7 @@ class HomePage extends React.Component {
     }
 
     getTipoPago(token) {
-        return fetch('http://api.softnet.cl/formaPago', {
+        return fetch('http://localhost:8000/formaPago', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -183,7 +183,7 @@ class HomePage extends React.Component {
     }
 
     getVendedores(token) {
-        return fetch('http://api.softnet.cl/vendedores', {
+        return fetch('http://localhost:8000/vendedores', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -200,7 +200,7 @@ class HomePage extends React.Component {
     }
 
     getAreaNegocio(token) {
-        return fetch('http://api.softnet.cl/areaNegocio', {
+        return fetch('http://localhost:8000/areaNegocio', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -333,16 +333,7 @@ class HomePage extends React.Component {
 
         let token = this.state.token.token;
 
-
-        /*
-    let enviarBoleta = {
-        carrito: this.state.carrito,
-        descuento: this.state.descuento,
-        total: final
-    }
-    */
-
-        fetch('http://api.softnet.cl/boleta', {
+        fetch('http://localhost:8000/boleta', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -358,7 +349,7 @@ class HomePage extends React.Component {
                 this.inputElement.click();
                 this.setState({ carrito: [] });
                 localStorage.setItem('carrito', JSON.stringify(this.state.carrito));
-
+                npm
             })
             .catch(error => {
 
