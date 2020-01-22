@@ -21,7 +21,10 @@ function login(username, password, rut) {
                 user.authdata = window.btoa(username + ':' + password);
                 localStorage.setItem('user', JSON.stringify(user));
                 localStorage.setItem('carrito', JSON.stringify([]));
-                localStorage.setItem('cola', JSON.stringify([]));
+                if(!localStorage.getItem('cola')){
+                    localStorage.setItem('cola', JSON.stringify([]));
+                }
+                
 
                 return user;
             }
