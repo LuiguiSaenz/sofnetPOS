@@ -1,6 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import ReactToPrint from 'react-to-print';
+import math from 'mathjs-expression-parser'
+import _clone from 'lodash/clone'
+import _escapeRegExp from 'lodash/escapeRegExp'
 
 const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -12,6 +15,7 @@ const formatter = new Intl.NumberFormat('en-US', {
 class ComponentToPrint extends React.Component {
 
     showhide(){
+        
         if(this.props.show){
             return "";
         }
@@ -21,7 +25,7 @@ class ComponentToPrint extends React.Component {
 
     hideIfBoletaSimple(){
 
-        if(this.props.tipodocumento === "BOLETA SIMPLE"){
+        if(this.props.tipodocumento.toUpperCase() === "BOLETA SIMPLE"){
             return "hide";
         }
         return "";
@@ -37,7 +41,7 @@ class ComponentToPrint extends React.Component {
 
             this.props.carrito.map((pro, i) => {
                 return <tr className={this.hideIfBoletaSimple()} key={i} >
-                    <td><p id={i}>1 {pro.nombre}  </p></td><td className="tdright"><p>{formatter.format(pro.precio)} </p></td>
+                    <td><p id={i}>1 {pro.nombre}  </p></td><td className="tdright"><p>${Intl.NumberFormat(["ban", "id"]).format(pro.precio)} </p></td>
                 </tr>
             })
 
@@ -53,7 +57,7 @@ class ComponentToPrint extends React.Component {
         let tiempo = this.props.tiempo;
 
         return (
-            <div className={this.showhide()}>
+            <div className={this.showhide()} id="boletaimprimir" style={{ background: 'white'}}>
 
                 <div className="encabezadoboleta">
 
@@ -63,27 +67,31 @@ class ComponentToPrint extends React.Component {
                     <p><b>GIRO:</b> {this.props.datosempresa.giro1} </p>
                     <p><b>FECHA:</b> {tiempo} </p>
                 </div>
-                <h4>COMPROBANTE DE VENTA</h4>
+                <h4>BOLETA ELECTRÓNICA · FOLIO {this.props.folio}</h4>
                 <table>
                     <thead>
                         <tr className={this.hideIfBoletaSimple()}>
-                        <th>PRODUCTO</th>
+                        <th style={{ textAlign: 'left'}}>PRODUCTO</th>
                         <th className="tdright">PRECIO UNIDAD</th>
                         </tr>
                     </thead>
                     <tbody style={{ borderTop: '1px solid black' }}>
                         {this.mostrarCarrito()}
                         <tr style={{ borderTop: '1px solid black' }}>
-                            <td><p>SUBTOTAL</p></td>
-                            <td className="tdright">{formatter.format(totalidad)} </td>
+                            <td><p>MONTO NETO</p></td>
+                            <td className="tdright">${Intl.NumberFormat(["ban", "id"]).format((totalidad/1.19).toFixed(0))} </td>
+                        </tr>
+                        <tr>
+                            <td><p>IVA</p></td>
+                            <td className="tdright">${Intl.NumberFormat(["ban", "id"]).format(Math.round((totalidad/1.19)*19/100))} </td>
                         </tr>
                         <tr>
                             <td><p>DESCUENTO</p></td>
-                            <td className="tdright">{formatter.format(descuentofinal)} </td>
+                            <td className="tdright">${Intl.NumberFormat(["ban", "id"]).format(descuentofinal)} </td>
                         </tr>
                         <tr>
-                            <td><p>TOTAL</p></td>
-                            <td className="tdright">{formatter.format(final)}</td>
+                            <td><p>MONTO TOTAL</p></td>
+                            <td className="tdright">${Intl.NumberFormat(["ban", "id"]).format(final)}</td>
                         </tr>
                         {/*<tr>
                             <td><p>TIPO DE PAGO</p></td>
@@ -93,7 +101,7 @@ class ComponentToPrint extends React.Component {
                 </table>
                 <div>
                 <img className="timbrefiscal" src={`data:image/png;base64, ${this.props.timbre}`} alt="Timbre Fiscal" />
-                <hr/>
+                <p style={{ textAlign:'center', fontSize: 12, margin: 0}}>Timbre Electrónico S.I.I. · Verifique Documento: http://www.sii.cl</p>
                 </div>
             </div>
         );
@@ -112,8 +120,11 @@ class HomePage extends React.Component {
             montofinal: 0,
             cola: JSON.parse(localStorage.getItem('cola')),
             efectivo: 0,
+            formula: '',
+            subbedFormula: '',
             tipopago: "Cargando",
             datosempresa: "",
+            folio:'',
             curtime: new Date().toLocaleString(),
             token: JSON.parse(localStorage.getItem('user')),
             bodega: [{ 'id': 0, 'nombre': 'Cargando' }],
@@ -131,16 +142,78 @@ class HomePage extends React.Component {
             TipoDocumento: ""
         };
 
-        this.handleSubmit = this.handleSubmit.bind(this);
+        //this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleChangeProducto = this.handleChangeProducto.bind(this)
     }
 
+    ////////////////////////
+    /*
+
+
+*/
+
+
+
+
+
+checkFormula = () => {
+    const subbedFormula = this.subFields(this.state.formula.toString())
+    const result = this.getResult(subbedFormula)
+    this.setState({
+      subbedFormula: subbedFormula,
+      formula: result
+    })
+
+}
+
+  subFields = (formula) => {
+    let swappedFormula = _clone(formula)
+    const variables = swappedFormula.match(/\{[^\{\}]+\}/gi) || []
+    const variablesArray = variables.map(myVariableWithBrackets => {
+      return myVariableWithBrackets.slice(1, -1)
+    })
+    variablesArray.map(myVariable => {
+      swappedFormula = swappedFormula.replace(
+        new RegExp('{'+_escapeRegExp(myVariable)+'}', 'gi'),
+        '1' //when swapping with real value, make sure to cast whatever this value is as a Number to prevent bad code
+      )
+    })
+    return swappedFormula
+  }
+
+  getResult = (mathString) => {
+    let result
+    try{
+      result = math.eval(mathString)
+    }
+    catch(err){
+      console.log(err)
+      result = ''
+    }
+    return result
+  }
+
+
+
+
+/*
+
+
+    */
     setTipoDocumento(valor){
-        this.setState({TipoDocumento: valor})
+        this.setState({TipoDocumento: valor, carrito: []})
+    }
+
+    handleChangeProducto(e){
+        const { name, value } = e.target
+        const { carrito } = this.state
+        carrito[name].precio = value
+        return this.setState({ carrito: carrito })
     }
 
     getDatosEmpresa(token) {
 
-        return fetch('http://apitest.softnet.cl/datoEmpresa', {
+        return fetch('http://api.softnet.cl/datoEmpresa', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -161,7 +234,7 @@ class HomePage extends React.Component {
     
 
     getProductos(token) {
-        return fetch('http://apitest.softnet.cl/producto', {
+        return fetch('http://api.softnet.cl/producto', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -170,7 +243,7 @@ class HomePage extends React.Component {
         })
             .then(pros => pros.json())
             .then(pros => {
-
+                console.log(pros)
                 localStorage.setItem('productos', JSON.stringify(pros));
                 this.setState({ productos: pros, loading: false })
             })
@@ -181,7 +254,7 @@ class HomePage extends React.Component {
 
 
     getBodega(token) {
-        return fetch('http://apitest.softnet.cl/bodega', {
+        return fetch('http://api.softnet.cl/bodega', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -198,7 +271,7 @@ class HomePage extends React.Component {
     }
 
     getTipoPago(token) {
-        return fetch('http://apitest.softnet.cl/formaPago', {
+        return fetch('http://api.softnet.cl/formaPago', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -215,7 +288,7 @@ class HomePage extends React.Component {
     }
 
     getVendedores(token) {
-        return fetch('http://apitest.softnet.cl/vendedores', {
+        return fetch('http://api.softnet.cl/vendedores', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -224,6 +297,7 @@ class HomePage extends React.Component {
         })
             .then(vend => vend.json())
             .then(vend => {
+                console.log(vend)
                 this.setState({ vendedores: vend, inputVendedor: vend[0].rut_vendedor })
             })
             .catch(error => {
@@ -232,7 +306,7 @@ class HomePage extends React.Component {
     }
 
     getAreaNegocio(token) {
-        return fetch('http://apitest.softnet.cl/areaNegocio', {
+        return fetch('http://api.softnet.cl/areaNegocio', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -250,24 +324,28 @@ class HomePage extends React.Component {
 
     agregarCarrito(producto) {
         this.state.carrito.push(producto);
-        this.setState({ carrito: this.state.carrito, filter: "" });
+        this.setState({ cargandoboleta: false, carrito: this.state.carrito, filter: "" });
         localStorage.setItem('carrito', JSON.stringify(this.state.carrito));
     }
 
-    mostrarCarrito() {
+    mostrarCarritoEditar() {
         if (this.state.carrito.length === 0) {
-            return <h4>Sin productos en carrito</h4>
+            return <div className="carritoproducto carrito"></div>;
         }
 
         return (
-            <div className="carrito">
+            <div className="carritoproducto carrito">
+<table>
+    
 
                 {this.state.carrito.map((pro, i) => {
-                    return <div key={'cart'+i} className="productos-unitario">
-                        <a onClick={() => this.removerDelCarrito(i)} href="javascript:void(0)"><i className="fas fa-minus-circle"></i></a> <p id={i}>1 {pro.nombre}  </p><b>{formatter.format(pro.precio)} </b>
-                    </div>
+                    return <tr key={'cart'+i} className="productos-unitario">
+                    <td style={{ width: 30 }}><a onClick={() => this.removerDelCarrito(i)} href="javascript:void(0)"><i className="fas fa-minus-circle"></i></a></td>
+                    <td style={{ textAlign: 'left'}}><p id={i}>1 {pro.nombre}  </p></td>
+                    <td style={{ textAlign: 'right'}}><input type="number" defaultValue={pro.precio} name={i} onChange={this.handleChangeProducto} /></td>
+                </tr>
                 })}
-
+</table>
 
             </div>
         )
@@ -283,6 +361,16 @@ class HomePage extends React.Component {
 
     }
 
+    removerDelCola(posicion) {
+        let colaNew = this.state.cola;
+
+        var removed = colaNew.splice(posicion, 1);
+
+        this.setState({ cola: colaNew });
+        localStorage.setItem('cola', JSON.stringify(colaNew));
+
+    }
+
     componentDidMount() {
         let user = JSON.parse(localStorage.getItem('user'));
         let tokenReceived = user.token;
@@ -292,6 +380,7 @@ class HomePage extends React.Component {
         this.getBodega(tokenReceived);
         this.getVendedores(tokenReceived);
         this.getAreaNegocio(tokenReceived)
+        
         /*
         setInterval(() => {
             this.setState({
@@ -335,7 +424,14 @@ class HomePage extends React.Component {
     sincronizarBoletas(){
         this.setState({ sincronizando: true })
         let cola = JSON.parse(localStorage.getItem('cola'));
-        cola.forEach((boletaArray) => this.syncBoleta(boletaArray));
+        const longitud = cola.length
+        cola.forEach((boletaArray,i) => {
+            console.log(i)
+            this.syncBoleta(boletaArray)
+            if(i+1 === longitud){
+                return this.setState({ sincronizando: false})
+            }
+        })
         
     }
 
@@ -344,7 +440,7 @@ class HomePage extends React.Component {
         let colastate = this.state.cola;
 
         let token = this.state.token.token;
-        return fetch('http://apitest.softnet.cl/boleta', {
+        return fetch('http://api.softnet.cl/boleta', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -355,6 +451,11 @@ class HomePage extends React.Component {
             .then(pros => pros.json())
             .then(pros => {
                 console.log(pros)
+                if(!pros[0]){
+                    this.setState({ cargandoboleta: false });
+                    
+                    return false
+                }
                 var removeIndex = colastate.map(function(item) { return item[0].fecha; }).indexOf(enviarBoleta[0].fecha);
 
                 colastate.splice(removeIndex, 1);
@@ -371,29 +472,100 @@ class HomePage extends React.Component {
 
     }
 
-    handleSubmit = event => {
+    imprimir(){
 
+        var printWindow = window.open('', '', 'height=200,width=400');
+        printWindow.document.write(`<html><head><title>Resumen de órdenes</title>`);
+ 
+        //Print the Table CSS.
+        var table_style = document.getElementById("table_style").innerHTML;
+        printWindow.document.write('<style type = "text/css">');
+        printWindow.document.write(table_style);
+        printWindow.document.write('</style>');
+        printWindow.document.write('</head>');
+ 
+        //Print the DIV contents i.e. the HTML Table.
+        printWindow.document.write('<body class="print">');
+        var divContents = document.getElementById("boletaimprimir").outerHTML;
+        printWindow.document.write(divContents);
+        printWindow.document.write('</body>');
+ 
+        printWindow.document.write('</html>');
+        printWindow.document.close();
+        printWindow.print();
 
-        event.preventDefault();
+    }
+
+    handleSubmit = () => {
+
+        let { carrito, formula, TipoDocumento } = this.state
+        // event.preventDefault();
+        const carritotemporal = carrito.map(item => ({...item})) 
+        const detalle = []
+        
+        if(TipoDocumento === 'Boleta Simple'){
+            this.checkFormula()
+            let error = 0
+            console.log(formula)
+            if(!formula){
+                return alert("Escribe un número")
+            }
+            if(formula.toString().indexOf('+') > -1){ error++ }
+            if(formula.toString().indexOf('-') > -1){ error++ }
+            if(formula.toString().indexOf('*') > -1){ error++ }
+            if(formula.toString().indexOf('/') > -1){ error++ }
+    
+            if(error > 0){
+                return alert("Obtén el total de la operación antes de procesar la boleta")
+            }
+            console.log(formula)
+            detalle.push({
+                codigo: 1,
+                estado: 1,
+                exento: "",
+                nombre:'GENERICO',
+                precio: parseFloat(formula),
+                Precio: parseFloat(formula)
+            })
+            carrito.push({
+                codigo: 1,
+                estado: 1,
+                exento: "",
+                nombre:'GENERICO',
+                precio: parseFloat(formula),
+                Precio: parseFloat(formula)
+            })
+
+        } else {
+            carritotemporal.map(p => {
+                detalle.push(p)
+            })
+        }
+
         this.setState({ cargandoboleta: true });
-        let totalidad = this.state.carrito.reduce((prev, cur) => prev + parseInt(cur.precio), 0);
-        let final = totalidad - (totalidad * parseInt(this.state.descuento) / 100);
-        let detalle = this.state.carrito;
+
+        
+
         detalle.forEach((obj) => obj.Descuento = "0");
         detalle.forEach((obj) => obj.Cantidad = "1");
         detalle.forEach((obj) => obj.Bodega = this.state.inputBodega);
         detalle.forEach((obj) => obj.Afecto = false);
         detalle.forEach((obj) => obj.Codigo = obj.codigo);
+        detalle.forEach((obj) => obj.Precio = Math.ceil(obj.precio/1.19))
+        detalle.forEach((obj) => obj.precio = Math.ceil(obj.precio/1.19))
+        let totalidad = detalle.reduce((prev, cur) => prev + parseFloat(cur.precio), 0);
+        let final = totalidad - (totalidad * parseInt(this.state.descuento) / 100);
+          
         let enviarBoleta = [
             {
                 "Encabezado": {
-                    "Receptor": "25691135-3",
-                    "MontoNeto": final,
+                    "Receptor": "66666666-6",
+                    "MontoNeto": parseInt(final),
                     "Descuento": this.state.descuento,
                     "TipoDocumento": "39",
                     "AreaNegocio": this.state.inputAreaNegocio,
                     "Observacion": "observacion",
-                    "Direccion": "123"
+                    "Direccion": "santiago"
                 },
                 "Detalle": detalle,
                 "Adicional": {
@@ -405,10 +577,10 @@ class HomePage extends React.Component {
             }
         ];
 
-
         let token = this.state.token.token;
         
-        return fetch('http://apitest.softnet.cl/boleta', {
+        
+        return fetch('http://api.softnet.cl/boleta', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -419,26 +591,41 @@ class HomePage extends React.Component {
             .then(pros => pros.json())
             .then(pros => {
 
+                console.log(pros)
+                if(!pros[0]){
+                    this.setState({ cargandoboleta: false });
+                    return alert("Error al procesar la boleta")
+                } else if(!pros[0].folio){
+                    this.setState({ cargandoboleta: false });
+                    return alert("Error al procesar la boleta")
+                }
+                this.setState({ folio: pros[0].folio })
                 ///// REINICIAR CARRITO ///////
-                let timbre = pros[0].timbre;
-                // this.setState({ timbre: timbre });
+                /*
+                if(pros[0].timbre){
+                    this.setState({ timbre: pros[0].timbre,  });
+                }
+                */
                 this.inputElement.click();
-                this.setState({ carrito: [], cargandoboleta: false });
-                localStorage.setItem('carrito', JSON.stringify(this.state.carrito));
+                //this.imprimir()
 
+                setTimeout(() => {
+                    this.setState({ carrito: [], cargandoboleta: false });
+                }, 1000)
+                localStorage.setItem('carrito', JSON.stringify([]));
             })
             .catch(error => {
-
+                console.log(error)
+                this.inputElement.click();
                 ///// GUARDAR BOLETA EN LA COLA DEL NAVEGADOR ///////
                 this.state.cola.push(enviarBoleta);
                 this.setState({ cola: this.state.cola });
-                localStorage.setItem('cola', JSON.stringify(this.state.cola));
+                localStorage.setItem('cola', JSON.stringify(this.state.cola))
 
                 ///// REINICIAR CARRITO ///////
-
-                this.inputElement.click();
-                this.setState({ carrito: [] });
+                this.setState({ carrito: [], cargandoboleta: false });
                 localStorage.setItem('carrito', JSON.stringify(this.state.carrito));
+
             });
 
     }
@@ -462,9 +649,9 @@ class HomePage extends React.Component {
 
     mostrarColaBoletas(){
         return this.state.cola.map((item, i) => {
-            return <div>
-
-                <span className="block" key={'boleta'+i}><b>BOLETA - {item[0].fecha}</b></span>
+            return <div key={'cola'+i} className="productos-unitario">
+                <span style={{ display: 'inline-block'}}  key={'boleta'+i}><b>BOLETA - {item[0].fecha}</b></span>
+                <a onClick={() => this.removerDelCola(i)} href="javascript:void(0)"><i style={{ color: '#fe7701', marginLeft: 5, fontSize: 15}} className="fas fa-minus-circle"></i></a>
             </div>
         });
     }
@@ -475,22 +662,28 @@ class HomePage extends React.Component {
             return "Sincronizando...";
         }
 
-        return <a href="javascript:void(0)" className="btn btn-primary" onClick={() => this.sincronizarBoletas()}>SINCRONIZAR BOLETAS</a>;
+        return <a style={{marginBottom: '15px'}} href="javascript:void(0)" className="btn-naranja btn" onClick={() => this.sincronizarBoletas()}>SINCRONIZAR BOLETAS</a>;
+    }
+
+    verColaBoton(){
+        if(this.state.cola.length < 1){
+            return"";
+            //return <p>Sin boletas en Cola</p>;
+        }
+        
+        return <button className="alertaboletas btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+    !
+  </button>
     }
 
     verCola(){
         if(this.state.cola.length < 1){
-            return <p>Sin boletas en Cola</p>;
+            return"";
+            //return <p>Sin boletas en Cola</p>;
         }
         
         return <div>
-            <h4>¡Atención! Hay {this.state.cola.length} boletas pendientes por sincronizar</h4>
-            
-            <p style={{margin: 0}}> 
-   <button className="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-    VER BOLETAS
-  </button>
-</p>
+
 <div className="collapse padding5" id="collapseExample">
   <div className="card card-body">
   {this.mostrarColaBoletas()}
@@ -498,6 +691,13 @@ class HomePage extends React.Component {
   </div>
 </div>
         </div>
+    }
+    
+
+    escribir(num){
+        const { formula } = this.state
+
+        return this.setState({ formula: formula + num })
     }
 
 
@@ -507,7 +707,8 @@ class HomePage extends React.Component {
             return (
                 <div>
                     
-                    <a className="tipodocumento btn btn-primary" onClick={() => this.setTipoDocumento("BOLETA SIMPLE")} href="javascript:void(0)">BOLETA SIMPLE</a>
+                    <a className="tipodocumento btn btn-primary" onClick={() => this.setTipoDocumento("Boleta Simple")} href="javascript:void(0)">BOLETA SIMPLE
+                    </a>
 
                     <a className="tipodocumento btn btn-primary" onClick={() => this.setTipoDocumento("BOLETA CON DETALLE")} href="javascript:void(0)">BOLETA CON DETALLE</a>
                 </div>
@@ -542,7 +743,9 @@ class HomePage extends React.Component {
 
             if (this.state.loading || this.state.TipoDocumento === "") {
                 return <div className="cargando">
-                    <h1>CARGANDO...</h1>
+                    <h1 style={{color: 'white', fontWeight: 600, lineHeight: '10px', fontSize: 60}} className="nuppy text-white">NUPY</h1>
+                    <h3 style={{color: 'white', fontWeight: 600}}>CARGANDO</h3>
+                    <h4 style={{color: 'white'}}>Seleccione el tipo de boleta que desea generar</h4>
                     {this.botonesTipoPago()}
                     </div>
             }
@@ -552,114 +755,196 @@ class HomePage extends React.Component {
 
         
 
-        
+        const { cargandoboleta, TipoDocumento, formula} = this.state
 
         return (
             <div>
+                <div className={`celeste ${this.showAll()}`}>
+                <div className="row ">
+                    <div className="col-md-12 col-md-12">
+                            <h2 className="titulocarrito titulocart">NUPY <b className="boletasimple">{this.state.TipoDocumento}</b></h2>
+                            <button className="configbutton" type="button" data-toggle="collapse" data-target="#configmodule" aria-expanded="false" aria-controls="configmodule">
+                            <i className="fas fa-cog"></i>
+                            </button>
+                            {this.verColaBoton()}
+                            
+                            { /* <Link style={{ float: "right", marginTop: -35 }} to="/login">Salir</Link> */}
+                            
+
+                            
+                            <p className="clear"></p>
+                            
+                        </div>
+                        <div className="col-md-12 col-md-12">
+                        {this.verCola()}
+                        </div>
+                    </div>
+                </div>
+                <div className="azuloscuro">
+
                 <Renderizar />
                 <div className={this.showAll()}>
-                <div className="row">
-                    <form onSubmit={this.handleSubmit}>
-                        <div className="col-md-6 col-md-6">
-                            <h2 className="titulocart">CARRITO - {this.state.TipoDocumento} </h2><Link style={{ float: "right", marginTop: -35 }} to="/login">Salir</Link>
-                            {this.verCola()}
+                <div className="row nomargin">
 
-                            <h4 className="contadorcart">{this.state.carrito.length} Productos</h4>
-                            <p className="clear"></p>
-                            {this.mostrarCarrito()}
-                        </div>
-                        <div className="col-md-6 col-md-6">
-                            <h2>PRODUCTOS {JSON.stringify(this.state.prueba)} </h2>
-                            <input placeholder="BUSCAR PRODUCTOS" className="form-control" value={filter} onChange={this.handleChange} />
+        <div className="collapse " id="configmodule">
+  <div className="contenedor">
+        
+  <div className="col-md-12 col-md-12">
+            <h2>Configuración</h2>
+  </div>
+        <div className="col-md-12 col-md-12">
+
+            <div className="form-group">
+                <label className="form-label">TIPO DE PAGO</label>
+                <select className="form-control" onChange={this.handleTipoPago}>
+                    {this.state.formapago.map(tipo => {
+                        return <option value={tipo.id}>{tipo.nombre}</option>
+                    })}
+                </select>
+
+            </div>
+
+        </div>
+
+        <div className="col-md-12 col-md-12">
+
+            <div className="form-group">
+                <label className="form-label">BODEGA</label>
+                <select className="form-control" onChange={this.handleBodega}>
+                    {this.state.bodega.map(tipo => {
+                        return <option value={tipo.id}>{tipo.nombre}</option>
+                    })}
+                </select>
+
+            </div>
+
+        </div>
+
+        <div className="col-md-12 col-md-12">
+            <div className="form-group">
+                <label className="form-label">VENDEDOR</label>
+                <select className="form-control" onChange={this.handleVendedor}>
+                    {this.state.vendedores.map(tipo => {
+                        return <option value={tipo.rut_vendedor}>{tipo.nombre}</option>
+                    })}
+                </select>
+
+            </div>
+        </div>
+
+
+        <div className="col-md-12 col-md-12">
+            <div className="form-group">
+                <label className="form-label">Area Negocio</label>
+                <select className="form-control" onChange={this.handleAreaNegocio}>
+                    {this.state.areaNegocio.map(tipo => {
+                        return <option value={tipo.id}>{tipo.nombre}</option>
+                    })}
+                </select>
+
+            </div>
+        </div> 
+        <div className="col-md-12 col-md-12">
+        <Link className="btn btn-naranja" to="/login">SALIR DE MI CUENTA</Link>
+        </div>  
+    </div>
+
+</div>
+{TipoDocumento === 'Boleta Simple' ? <div> 
+
+
+<div className="calc">
+    <h1 className="amount">{formula}</h1>
+  <div className="calc-display-hr"></div>
+  <div className="calc-btn" id="btn">
+    <button className="calc-btn-primary" id="seven" onClick={() => this.escribir('7')}>7</button>
+    <button className="calc-btn-primary" id="eight" onClick={() => this.escribir('8')}>8</button>
+    <button className="calc-btn-primary" id="nine" onClick={() => this.escribir('9')}>9</button>
+    <button className="calc-btn-primary btn-bg" id="divide" onClick={() => this.escribir('/')}>/</button>
+    <button className="calc-btn-primary" id="four" onClick={() => this.escribir('4')}>4</button>
+    <button className="calc-btn-primary" id="five" onClick={() => this.escribir('5')}>5</button>
+    
+    
+    <button className="calc-btn-primary" id="six" onClick={() => this.escribir('6')}>6</button>
+    <button className="calc-btn-primary btn-bg" id="multiply" onClick={() => this.escribir('*')}>*</button>
+    <button className="calc-btn-primary" id="one" onClick={() => this.escribir('1')}>1</button>
+    <button className="calc-btn-primary" id="two" onClick={() => this.escribir('2')}>2</button>
+    <button className="calc-btn-primary" id="three" onClick={() => this.escribir('3')}>3</button>
+    <button className="calc-btn-primary btn-bg" id="add" onClick={() => this.escribir('+')}>+</button>
+    <button className="calc-btn-primary btn-bg" id="decimal" onClick={() => this.escribir('.')}>.</button>
+    <button className="calc-btn-primary" id="zero" onClick={() => this.escribir('0')}>0</button>
+       
+    <button className="calc-btn-primary btn-bg-equal" id="equals" onClick={() => this.checkFormula()}>=</button>
+    <button className="calc-btn-primary btn-bg" id="subtract" onClick={() => this.escribir('-')}>-</button>
+    <button className="calc-btn-clear" onClick={() => this.setState({ formula: ''})}>BORRAR</button>
+    { cargandoboleta ? <h4 className="loading2">CARGANDO</h4> : <button className="calc-btn-clear2" onClick={() => this.handleSubmit()}>EMITIR</button> }
+  </div>
+</div>
+
+
+
+
+</div> : <div className="nopadding ol-md-6 col-md-6">
+                            <div className="cuadrobuscador">
+
+                            <input  placeholder="BUSCAR PRODUCTOS" className="form-control" value={filter} onChange={this.handleChange} />
                             <div className="contenedor-productos">
                                 {productosFiltrados.map((info, i) => {
-                                    return <div className="boxproducto" key={'filtrados'+i} onClick={() => this.agregarCarrito(info)} key={i}><h4 className="left" > {info.nombre} </h4><p className="hide">{info.codigo} </p> <h4 className="right">{formatter.format(info.precio)} </h4></div>;
+                                    return <div className="boxproducto" key={'filtrados'+i} onClick={() => this.agregarCarrito(info)} key={i}><h4 className="left" > {info.nombre} </h4><p className="hide">{info.codigo} </p> <h4 className="right">{Intl.NumberFormat(["ban", "id"]).format(info.precio)} </h4></div>;
                                 })}
                             </div>
 
-                            <h3>TOTAL: {formatter.format(final)}</h3>
-
-                            <div className="row">
-                                <div className="col-md-6 col-md-6">
-
-                                    <div className="form-group">
-                                        <label className="form-label">TIPO DE PAGO</label>
-                                        <select className="form-control" onChange={this.handleTipoPago}>
-                                            {this.state.formapago.map(tipo => {
-                                                return <option value={tipo.id}>{tipo.nombre}</option>
-                                            })}
-                                        </select>
-
-                                    </div>
-
-                                </div>
-
-                                <div className="col-md-6 col-md-6">
-
-                                    <div className="form-group">
-                                        <label className="form-label">BODEGA</label>
-                                        <select className="form-control" onChange={this.handleBodega}>
-                                            {this.state.bodega.map(tipo => {
-                                                return <option value={tipo.id}>{tipo.nombre}</option>
-                                            })}
-                                        </select>
-
-                                    </div>
-
-                                </div>
-
-                                <div className="col-md-6 col-md-6">
-                                    <div className="form-group">
-                                        <label className="form-label">VENDEDOR</label>
-                                        <select className="form-control" onChange={this.handleVendedor}>
-                                            {this.state.vendedores.map(tipo => {
-                                                return <option value={tipo.rut_vendedor}>{tipo.nombre}</option>
-                                            })}
-                                        </select>
-
-                                    </div>
-                                </div>
-
-
-                                <div className="col-md-6 col-md-6">
-                                    <div className="form-group">
-                                        <label className="form-label">Area Negocio</label>
-                                        <select className="form-control" onChange={this.handleAreaNegocio}>
-                                            {this.state.areaNegocio.map(tipo => {
-                                                return <option value={tipo.id}>{tipo.nombre}</option>
-                                            })}
-                                        </select>
-
-                                    </div>
-                                </div>
                             </div>
+                            
+
+                            
+<div className="productosenelcarrito">
+<h4 className="contadorcart">{this.state.carrito.length} Productos en el carrito</h4>
+{this.mostrarCarritoEditar()}
+
+                     
 
                             <div className="form-group">
                                 <label className="form-label">DESCUENTO - Porcentaje</label>
-                                <input placeholder="DESCUENTO" className="form-control" onChange={this.handleDescuento} />
+                                <input placeholder="DESCUENTO" className="form-control botontransparente" onChange={this.handleDescuento} />
                             </div>
 
-                            <div className="col-medium">
-                                <label className="form-label">Monto a pagar</label>
-                                <input placeholder="MONTO" className="form-control" onChange={this.handleVuelto} />
+                                <div className="row" style={{ marginBottom: 10 }}>
+
+                                <div className="col-xs-4">
+                                <label className="mayuscula singrosor form-label">Monto</label>
+                                <input type="number" style={{borderBottom: '3px solid white', borderRadius: 0}} placeholder="MONTO" className="form-control botontransparente" onChange={this.handleVuelto} />
                             </div>
 
-                            <div className="col-medium">
-                                <label className="form-label">Vuelto</label>
-                                <input readOnly placeholder="VUELTO" className="form-control" value={formatter.format(vuelto)} />
+                            <div className="col-xs-4">
+                                <label className="mayuscula singrosor form-label">Vuelto</label>
+                                <input readOnly placeholder="VUELTO" className="form-control botontransparente" value={Intl.NumberFormat(["ban", "id"]).format(vuelto)} />
                             </div>
-                            <input className="btn btn-sucess" type="submit" value="FINALIZAR Y PAGAR" />
 
-                        </div>
-                    </form>
+                            <div className="col-xs-4">
+                            <label className="mayuscula singrosor form-label">Total</label>
+                            <h2 className="monto">{Intl.NumberFormat(["ban", "id"]).format(final)}</h2>
+                            </div>
+                                </div>
+                            
 
-                    <ReactToPrint
+                            
+
+                            
+                            { cargandoboleta ? <h4 className="loading">Cargando</h4> : <button className="pagar btn btn-sucess" onClick={() => this.handleSubmit()}>FINALIZAR Y PAGAR </button> }
+</div>
+                        </div>}
+                        
+                    
+                </div>
+                </div>
+
+                </div>
+                <ReactToPrint
                         trigger={() => <a ref={input => this.inputElement = input} className="hide" href="javascript:void(0)">IMPRIMIR</a>}
                         content={() => this.componentRef}
                     />
-                    <ComponentToPrint tipodocumento={this.state.TipoDocumento} show={this.state.cargandoboleta} timbre={this.state.timbre} tiempo={this.state.curtime} datosempresa={this.state.datosempresa} tipopago={this.state.inputPago} descuento={this.state.descuento} carrito={this.state.carrito} ref={el => (this.componentRef = el)} />
-                </div>
-                </div>
+                    <ComponentToPrint folio={this.state.folio} tipodocumento={this.state.TipoDocumento} show={this.state.cargandoboleta} timbre={this.state.timbre} tiempo={this.state.curtime} datosempresa={this.state.datosempresa} tipopago={this.state.inputPago} descuento={this.state.descuento} carrito={this.state.carrito} ref={el => (this.componentRef = el)} />
             </div>
         );
     }

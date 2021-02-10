@@ -25,7 +25,6 @@ class Pendientes extends React.Component{
             <div>
                 <Link className="btn btn-primary" to="/">VOLVER</Link>
                 {this.mostrar()}
-                
             </div>
         )
     }

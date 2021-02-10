@@ -51,28 +51,28 @@ class LoginPage extends React.Component {
     render() {
         const { username, password, rut, submitted, loading, error } = this.state;
         return (
-            <div className="col-md-6 col-md-offset-3">
-                <h2>Iniciar Sesión</h2>
+            <div className="col-md-6 col-md-offset-3 text-white">
+                <h2 style={{color: 'white'}}>Iniciar Sesión</h2>
                 <form name="form" onSubmit={this.handleSubmit}>
                     <div className={'form-group' + (submitted && !username ? ' has-error' : '')}>
-                        <label htmlFor="username">Usuario</label>
+                        <label htmlFor="username" style={{color: 'white'}}>Usuario</label>
                         <input type="text" className="form-control" name="username" value={username} onChange={this.handleChange} />
                         {submitted && !username &&
-                            <div className="help-block">Username is required</div>
+                            <div className="help-block">Usuario es requerido</div>
                         }
                     </div>
                     <div className={'form-group' + (submitted && !rut ? ' has-error' : '')}>
-                        <label htmlFor="rut">RUT</label>
+                        <label htmlFor="rut" style={{color: 'white'}}>RUT</label>
                         <input type="text" className="form-control" name="rut" value={rut} onChange={this.handleChange} />
                         {submitted && !rut &&
-                            <div className="help-block">rut is required</div>
+                            <div className="help-block">Rut es requerido</div>
                         }
                     </div>
                     <div className={'form-group' + (submitted && !password ? ' has-error' : '')}>
-                        <label htmlFor="password">Contraseña</label>
+                        <label htmlFor="password" style={{color: 'white'}}>Contraseña</label>
                         <input type="password" className="form-control" name="password" value={password} onChange={this.handleChange} />
                         {submitted && !password &&
-                            <div className="help-block">Password is required</div>
+                            <div className="help-block">Contraseña es requerida</div>
                         }
                     </div>
                     <div className="form-group">

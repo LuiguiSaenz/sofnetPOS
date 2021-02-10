@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 
+
+
 <head>
     <meta charset="UTF-8">
     <title>Softnet POS System</title>
@@ -10,9 +12,196 @@
     <script src="js/popper.min.js" ></script>
     <script src="js/bootstrap.min.js" ></script>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+Thambi+2:wght@400;600&family=Poppins&display=swap" rel="stylesheet"> 
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <style>
+    
+    p, a, span, label, h1, h2, h3, h4, h5, h6, link {
+    
+    font-family: 'Poppins', sans-serif;
+
+
+    }
+    .jumbotron > div, .jumbotron {
+        padding:0px;
+    }
+
+    .jumbotron > div {
+        width: 100%;
+    }
+    
+    .jumbotron > .container > .col-sm-12 {
+        padding: 0px;
+    }
+
+    .jumbotron {
+        margin:0px;
+    }
+    .nopadding {
+        padding: 0px;
+    }
+
+        .celeste {
+            background-color: #3464d0;
+            color: white;
+            text-align: left;
+            padding: 0px 30px;
+            padding-bottom: 100px;
+        }
+
+        .azuloscuro {
+            background-color: #022860;
+            color: white;
+        }
+
+        .productosenelcarrito {
+            padding: 0px 30px;
+        }
+
+        .nomargin {
+            margin:0px;
+        }
+        .cuadrobuscador {
+            margin: 30px;
+            margin-top: 30px;
+            margin-top: -97px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .alertaboletas {
+
+font-size: 20px;
+font-weight: bold;
+background: #fe7701;
+border-radius: 50%;
+padding: 3px 15px;
+float: right;
+margin-top: 20px;
+}
+
+.configbutton {
+background: transparent;
+float: right;
+margin-top: 20px;
+font-size: 25px;
+margin-left: 10px;
+border: none;
+}
+
+#configmodule {
+margin-top: -161px !important;
+padding: 29px !important;
+margin-bottom: 128px !important;
+width: 100% !important;
+transition: All ease 0.4s;
+}
+.productos-unitario input {
+    text-align: right;
+background-color: transparent;
+color: white;
+border: none;
+width: 80px;
+}
+.productos-unitario td {
+    padding: 10px;
+}
+#configmodule .contenedor{
+
+background: #1e1e1e;
+padding: 22px 17px;
+border-radius: 8px;
+
+}
+.jumbotron > div {
+    background: #022860;
+    height: 100vh;
+}
+
+.loading {
+    width: 100%;
+padding: 14px;
+background: #585a58;
+color: white;
+border-bottom: 3px solid #7d7f7d;
+text-align: center;
+border-radius: 5px;
+}
+.btn-naranja {
+    background-color: #88019c;
+    color:white;
+}
+
+
+
+        .cuadrobuscador input {
+            border: none;
+            padding: 15px;
+        }
+
+        .botontransparente {
+            background: none !important;
+            padding: 0px;
+            font-size: 16px;
+            color: white;
+            border: none;
+
+        }
+        .botontransparente::placeholder{
+            color:#51567a;
+        }
+
+        .mayuscula {
+            text-transform: uppercase;
+        }
+
+        .singrosor {
+            font-weight: normal;
+        }
+    
+        .total {
+            margin-top: -5px;
+            margin-bottom: -15px;
+            color: white !important;
+            font-size: 14px;
+        
+        }
+
+        .monto {
+            margin-top: 8px;
+            color: #05ab30;
+            font-size: 16px;
+                }   
+    
+        .carritoproducto {
+            min-height: 110px;
+            max-height: 110px;
+            overflow: scroll;
+            padding: 11px;
+            background: #0c203e;
+            margin-bottom: 9px;
+            border-radius: 10px;
+            height: 160px;
+           }
+
+        .boletasimple {
+            font-size: 20px;
+            font-weight: normal;
+        }
+
+        .titulocarrito {
+            font-weight: 600;
+            float: left;
+        }
+        .nuppy {
+            font-family: 'Baloo Thambi 2', cursive !important;
+        }
+        .pagar {
+            margin-bottom: 31px;
+        }
+
         body {
             background-color: #eee;
         }
@@ -31,7 +220,8 @@
             position: absolute;
             left: 50%;
             -webkit-transform: translateX(-50%);
-            transform: translateX(-50%)
+            transform: translateX(-50%);
+            top: 130px;
         }
 
         a {
@@ -44,21 +234,26 @@
 
         .boxproducto {
             transition: All ease 0.4s;
-            height: 39px;
             clear: both;
-            border-bottom: 1px solid #222;
         }
 
         .boxproducto .left {
             float: left;
             font-size: 13px;
             font-weight: 400;
-            color: #6f6f6f;
+            color: black;
         }
 
+
+        .abdias {
+            color:red;
+        }
+        
         .boxproducto .right {
             float: right;
             font-size: 13px;
+            color: black;
+
         }
 
         .boxproducto:hover {
@@ -74,8 +269,9 @@
         }
         .timbrefiscal {
             width: 100%;
-            margin-bottom: 30px;
+            margin-bottom: 0px !important;
             margin-top: 10px;
+            max-height: 400px;
         }
 
         .encabezadoboleta p {
@@ -101,11 +297,10 @@
         }
 
         .contenedor-productos {
-            max-height: 200px;
+            max-height: 110px;
             overflow: scroll;
-            border: 1px solid #929292;
-            padding: 8px 15px;
-            border-radius: 10px;
+            padding: 0px 15px;
+            border-top: 2px solid silver;
         }
 
         ul {
@@ -143,13 +338,12 @@
         .carrito i {
             display: inline-block;
             vertical-align: middle;
-            color: #e00606;
+            color: #fe7701;
             font-size: 18px;
         }
 
         .productos-unitario {
             padding-bottom: 5px;
-            border-bottom: 2px dashed #cacaca;
             margin-bottom: 5px;
         }
 
@@ -160,7 +354,7 @@
             color: white;
             border-bottom: 3px solid #129e12;
         }
-
+        
         p.clear {
             clear: both;
         }
@@ -170,6 +364,201 @@
             display: inline-block;
             margin-bottom: 15px;
         }
+
+        .calc {
+  display: flex;
+  flex-direction : column;
+  margin: -101px 10px 10px 10px;
+}
+
+.amount {
+    font-size: 60px;
+    text-align: center;
+    min-height: 70px;
+}
+/*font-family: 'Montserrat', sans-serif;
+  background-color: #ebedef;
+  padding: 0;*/
+
+.calc-title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 40px;
+  align-items: center;
+}
+/*font-family: 'Montserrat', sans-serif;
+  background-color: #ebedef;
+  padding: 0;*/
+.calc-title-span {
+  color: #fb7454;
+  font-size: 15px;
+  letter-spacing: 1px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.calc-title-hr {
+  width: 200px;
+  height: 3px;
+  background-color: #fb7454;
+  opacity: 0.8;
+}
+/*font-family: 'Montserrat', sans-serif;
+  background-color: #ebedef;
+  padding: 0;*/
+.calc-display {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  height: 100px;
+  color: #fff; 
+}
+/*font-family: 'Montserrat', sans-serif;
+  background-color: #ebedef;
+  padding: 0;*/
+
+.secondary-display{
+  font-size:20px;
+  opacity : 0.8;
+  overflow-x : hidden;
+}
+
+.secondary-display::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    background-color: #F5F5F5;
+}
+.secondary-display::-webkit-scrollbar {
+  height : 4px;
+    background-color: #bdbdbd;
+  opacity: 0.7;
+}
+/*font-family: 'Montserrat', sans-serif;
+  background-color: #ebedef;
+  padding: 0;*/
+.secondary-display::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: #000000;
+      border: 3px solid #555555;
+}
+
+.primary-display::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    background-color: #F5F5F5;
+}
+/*font-family: 'Montserrat', sans-serif;
+  background-color: #ebedef;
+  padding: 0;*/
+.primary-display::-webkit-scrollbar {
+  height : 4px;
+    background-color: #bdbdbd;
+  opacity: 0.7;
+}
+.primary-display::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: #000000;
+      border: 3px solid #555555;
+}
+/*font-family: 'Montserrat', sans-serif;
+  background-color: #ebedef;
+  padding: 0;*/
+.calc-display-hr {
+  width: 250px;
+  height: 2px;
+  margin-top: 10px;
+  align-self: center;
+  background-color: #bdbdbd;
+  opacity: 0.4;
+}
+
+.calc-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  margin: 20px;
+}
+/*border-radius: 10px;
+    background-color: #000000;
+      border: 3px solid #555555;*/
+.calc-btn-primary {
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  margin: 10px 5px;
+  outline: none;
+  border: none;
+  background-color: transparent;
+  color: #fff;
+  font-size: 30px;
+  width: 20.5%;
+  height: 60px;
+  border: 2px solid #223a54;
+  border-radius: 100%;
+}
+/*border-radius: 10px;
+    background-color: #000000;
+      border: 3px solid #555555;*/
+.btn-bg{
+  background-color:#424242 !important;
+  opacity : 0.9;
+  border : none !important;
+}
+.btn-bg-equal{
+  background-color:#ff7555 !important;
+  border : none !important;
+}
+.calc-btn-primary:focus {
+  outline:none
+}
+/*border-radius: 10px;
+    background-color: #000000;
+      border: 3px solid #555555;*/
+.calc-btn-primary:active {
+  transform: scale(0.9);
+}
+.loading2 {
+    background: #585a58;
+color: white;
+border-bottom: 3px solid #7d7f7d;
+outline: none;
+  font-size: 30px;
+  padding: 10px 90px;
+  border-radius: 10px;
+  width: 100%;
+  text-align: center;
+}
+.calc-btn-clear2 {
+  outline: none;
+  border: none;
+  background-color: transparent;
+  color: #fff;
+  font-size: 30px;
+  padding: 10px 90px;
+  background-color: #129e12;
+  border-radius: 10px;
+  width: 100%;
+}
+
+.calc-btn-clear {
+  margin: 20px 1px;
+  width: 100%;
+  outline: none;
+  border: none;
+  background-color: transparent;
+  color: #fff;
+  font-size: 30px;
+  padding: 10px 90px;
+  border: 3px solid #ff7555;
+  border-radius: 10px;
+}
+/*border-radius: 10px;
+    background-color: #000000;
+      border: 3px solid #555555;*/
+.calc-btn-clear:active {
+  transform: scale(0.9);
+}
     </style>
 </head>
 
@@ -178,4 +567,50 @@
 
 </body>
 
+<style id="table_style" type="text/css">
+    .encabezadoboleta p,
+        .encabezadoboleta h1,
+        .encabezadoboleta h4,
+        .encabezadoboleta h3 {
+            margin: 0px;
+        }
+        .timbrefiscal {
+            width: 100%;
+            margin-bottom: 30px;
+            margin-top: 10px;
+        }
+
+        .encabezadoboleta p {
+            font-weight: 400;
+            font-size: 12px;
+        }
+        table h4 {
+            font-size: 13px;
+        }
+
+        .aligncenter {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+        }
+
+        table p {
+            font-size: 12px !important;
+            font-weight: bold !important;
+            margin-bottom: 3px !important;
+        }
+        .tdright {
+            text-align: right;
+        }
+        p, a, span, label, h1, h2, h3, h4, h5, h6, link {
+        font-family: 'Poppins', sans-serif;
+        font-size: 12px;
+        }
+        body {
+            margin:0px;
+            padding:0px;
+        }
+</style>
 </html>

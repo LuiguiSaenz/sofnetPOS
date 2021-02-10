@@ -12,7 +12,7 @@ function login(username, password, rut) {
         body: JSON.stringify({ username, password, rut })
     };
 
-    return fetch(`http://apitest.softnet.cl/login`, requestOptions)
+    return fetch(`http://api.softnet.cl/login`, requestOptions)
         .then(user => user.json())
         .then(user => {
 
