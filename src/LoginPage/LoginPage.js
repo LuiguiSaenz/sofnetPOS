@@ -1,6 +1,7 @@
 import React from 'react';
-
 import { userService } from '../_services';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'
 
 class LoginPage extends React.Component {
     constructor(props) {
@@ -14,7 +15,8 @@ class LoginPage extends React.Component {
             rut:'',
             submitted: false,
             loading: false,
-            error: ''
+            error: '',
+            toaststyle: { position: toast.POSITION.BOTTOM_RIGHT },
         };
 
         this.handleChange = this.handleChange.bind(this);
@@ -41,17 +43,26 @@ class LoginPage extends React.Component {
         userService.login(username, password, rut)
             .then(
                 user => {
+                    if(!user) {
+                        this.setState({ loading: false })
+                        return toast.error('Credenciales incorrectas', this.state.toaststyle)
+                        }
                     const { from } = this.props.location.state || { from: { pathname: "/" } };
                     this.props.history.push(from);
                 },
-                error => this.setState({ error, loading: false })
+                error => {
+                    toast.error('Credenciales incorrectas', this.state.toaststyle)
+                    this.setState({ error, loading: false })
+                }
             );
     }
 
     render() {
         const { username, password, rut, submitted, loading, error } = this.state;
         return (
-            <div className="col-md-6 col-md-offset-3 text-white">
+            <div style={{ padding: 40 }} className="col-md-6 col-md-offset-3 text-white">
+                <ToastContainer /> 
+                <h1 style={{color: 'white', fontWeight: 600, lineHeight: '10px', fontSize: 60}} className="nuppy text-white">NUPY</h1>
                 <h2 style={{color: 'white'}}>Iniciar Sesión</h2>
                 <form name="form" onSubmit={this.handleSubmit}>
                     <div className={'form-group' + (submitted && !username ? ' has-error' : '')}>
