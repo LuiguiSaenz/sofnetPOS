@@ -1237,8 +1237,8 @@ handleChangeReporte(e){
 
 <div className="calc">
     <h1 className="amount">{formula}</h1>
-  <div className="calc-display-hr"></div>
-  <div className="calc-btn" id="btn">
+    <div className="calc-display-hr"></div>
+    <div className="calc-btn" id="btn">
     <button className="calc-btn-primary" id="seven" onClick={() => this.escribir('7')}>7</button>
     <button className="calc-btn-primary" id="eight" onClick={() => this.escribir('8')}>8</button>
     <button className="calc-btn-primary" id="nine" onClick={() => this.escribir('9')}>9</button>
