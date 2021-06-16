@@ -15,9 +15,10 @@ function login(username, password, rut) {
     return fetch(`http://api.softnet.cl/login`, requestOptions)
         .then(user => user.json())
         .then(user => {
-            console.log(user)
-            if (user.token) {
 
+            
+            if (user.token) {
+                user.rut = rut
                 user.authdata = window.btoa(username + ':' + password);
                 localStorage.setItem('user', JSON.stringify(user));
                 localStorage.setItem('carrito', JSON.stringify([]));
