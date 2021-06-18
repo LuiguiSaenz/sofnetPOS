@@ -20,24 +20,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <style>
+    html, body {
+    height: 100%;
+    }
     
     p, a, span, label, h1, h2, h3, h4, h5, h6, link {
-    
     font-family: 'Poppins', sans-serif;
-
-
     }
     div.scrollmenu {
 background-color: #fff;
 overflow: auto;
 white-space: nowrap;
 margin-bottom: 10px;
-border-radius: 5px;
+}
+.contadorproductos{
+background: #3b4c59;
+padding: 16px;
 }
 .detalleproductospos{
-    text-align: left;
-    max-height: 457px;
-overflow: scroll;
+    text-align: left;}
+
+.contener {
+    padding: 0px 25px;
+}
+.contener2 {
+    padding: 0px 12px;
 }
 .seleccionado {
     background: #31b931;
@@ -57,14 +64,15 @@ overflow: scroll;
     margin-bottom: 5px;
 }
 .mb-4{
-    margin-bottom: 15px;
+    margin-bottom: 15px !important;
 }
 .hr {
 border: #e3e3e3 1px solid;
 margin: 11px 0px;
 }
 div.scrollmenu2 .spanseleccionado {
-    color:#31b931 !important;
+    color: white !important;
+background: #31b931;
 }
 div.scrollmenu2 span:hover {
     cursor: pointer;
@@ -131,17 +139,29 @@ border-radius: 6px;
     font-size: 10px;
 }
 
+.btn-editar{
+    border: black solid 2px;
+    color: black;
+    padding: 3px 22px;
+    font-size: 10px;
+}
+
 .subtitulo {
 font-size: 20px;
 font-weight: bold;
 }
-
+.fullheight {
+        height: 100% !important;
+    }
 div.scrollmenu2 span{
     display: inline-block;
-  color: black;
-  text-align: center;
-  padding: 10px 25px 11px 0px;
-  text-decoration: none;
+color: black;
+text-align: center;
+padding: 10px 25px;
+text-decoration: none;
+margin-right: 10px;
+background: #d7d7d7;
+border-radius: 7px;
 }
 div.scrollmenu span {
   display: inline-block;
@@ -156,7 +176,10 @@ div.scrollmenu span {
 .boxproductopos .precio {
     font-size: 16px;
 }
-
+.productos-unitario .precio {
+color: #f9af6f;
+font-size: 17px;
+}
 .boxproductopos span {
     background: #dbdbdb;
 padding: 2px 5px;
@@ -168,7 +191,7 @@ margin-bottom: 4px;
 .boxproductopos {
 background: white;
 border-radius: 10px;
-width: 22.6%;
+width: 23.2%;
 color: black;
 display: inline-block;
 margin-right: 10px;
@@ -258,10 +281,7 @@ margin-top: 20px;
 
 .configbutton {
 background: transparent;
-float: right;
-margin-top: 20px;
 font-size: 25px;
-margin-left: 10px;
 border: none;
 }
 
@@ -280,14 +300,21 @@ width: 80px;
 .productos-unitario td {
     padding: 10px;
 }
-#app {
-    padding: 0px 20px;
-}
+
 .contenedor {
     height: 100vh;
     overflow: scroll;
 }
-
+.barrasuperior {
+    background: #30414f;
+    color:white;
+    padding: 10px 30px;
+}
+.lateral {
+background: #182d3e;
+color: white;
+height: 100%;
+}
 #configmodule .contenedor{
 
 background: #1e1e1e;
@@ -356,7 +383,14 @@ border-radius: 5px;
             margin-top: 8px;
             color: #05ab30;
             font-size: 16px;
-                }   
+                } 
+            .carritoproducto {
+                height: 270px;
+                overflow: scroll;
+            }  
+            .mr-4 {
+                margin-right: 15px;
+            }
     /*
         .carritoproducto {
             min-height: 110px;
@@ -376,15 +410,11 @@ border-radius: 5px;
 
         .titulocarrito {
             font-weight: 600;
-            float: left;
+            font-size: 20px;
         }
         .nuppy {
             font-family: 'Baloo Thambi 2', cursive !important;
         }
-        .pagar {
-            margin-bottom: 31px;
-        }
-
         body {
             background-color: #eee;
             height: 100%;
@@ -752,11 +782,17 @@ outline: none;
 .calc-btn-clear:active {
   transform: scale(0.9);
 }
+.rows {
+background: #0e202f;
+padding: 15px 3px;
+display: flex;
+border-radius: 7px;
+}
     </style>
 </head>
 
 <body>
-    <div id="app"></div>
+    <div id="app" style="height: 100%;width: 98.6%;"></div>
 
 </body>
 

@@ -167,7 +167,8 @@ class HomePage extends React.Component {
             seleccionvariable: false,
             nuevaopcion: '',
             arrayopciones: [],
-            cantidadopcion: 0
+            cantidadopcion: 0,
+            activaredicion: false
         };
 
         //this.handleSubmit = this.handleSubmit.bind(this);
@@ -217,7 +218,7 @@ handleChangeOpcion(e){
 }
 
 visualizarProductos(producto){
-
+    const { activaredicion } = this.state
     if(!producto.productos) return this.productosVacios()
 
     if(producto.productos.length < 1) return this.productosVacios('vacio')
@@ -234,6 +235,7 @@ visualizarProductos(producto){
                     <div className="p-4">
                     <h3 className="nopadding"><b>{producto.titulo}</b></h3>
                     <h3 className="nopadding precio">${producto.precio_oferta ? Intl.NumberFormat(["ban", "id"]).format(producto.precio_oferta) : Intl.NumberFormat(["ban", "id"]).format(producto.precio_regular) }</h3>
+                    { activaredicion === true ? <button className="btn btn-eliminar mb-4" onClick={() => this.eliminarElemento(producto._id['$oid'], 'producto')}>ELIMINAR</button> : false }
                     {producto.detalles ? producto.detalles.map((prro,iprro) => {
                         return <span>{prro.titulo}</span>
                     }) : false }
@@ -245,7 +247,7 @@ visualizarProductos(producto){
 }
 
 productosVacios(tipo){
-    if(!tipo) return <div>
+    if(!tipo) return <div className="contener">
     <img src="claping.png" style={{ width: 100 }} />
     <h4>No hay nada seleccionado</h4>
     </div> 
@@ -257,7 +259,7 @@ productosVacios(tipo){
 }
 
 mostrarProductosCombo(filtro){
-    const { combos, categoriaseleccionada, comboseleccionado } = this.state
+    const { combos, categoriaseleccionada, activaredicion, comboseleccionado } = this.state
 
     if(!categoriaseleccionada) return this.productosVacios()
     if(!comboseleccionado ) return this.productosVacios()
@@ -284,9 +286,11 @@ mostrarProductosCombo(filtro){
 
             if(!combos[findi].categorias[posicionproductos].productos) return this.productosVacios()
 
-            return <div>
-            <button className="btn btn-agregar mb-4" onClick={()=>this.setState({ visualizacion: 'nuevoproducto' })}>NUEVO PRODUCTO</button>
+            return <div className="contener">
+            <button className="btn btn-agregar mb-4 mr-4" onClick={()=>this.setState({ visualizacion: 'nuevoproducto' })}>NUEVO PRODUCTO</button>
+            <button className="btn btn-editar mb-4 mr-4" onClick={() => this.setState({ activaredicion: activaredicion ? false : true })}>EDITAR</button>
             <button className="btn btn-eliminar mb-4" onClick={() => this.eliminarElemento(combos[findi].categorias[posicionproductos]._id['$oid'], 'subcategoria')}>ELIMINAR</button>
+            
             {this.visualizarProductos(combos[findi].categorias[posicionproductos])}
             </div> 
 
@@ -307,7 +311,7 @@ mostrarSubCategoria(categoriaseleccionada){
 
         if(!combos[findi].categorias) return false
 
-        return <div>
+        return <div className="contener">
             <h1 className="subtitulo">{combos[findi].titulo} <button className="btn btn-eliminar" onClick={() => this.eliminarElemento(combos[findi]._id['$oid'], 'categoria')}>ELIMINAR</button> </h1>
             
             <div className="scrollmenu2">
@@ -331,7 +335,9 @@ eliminarElemento(id, tipo){
     .then(res => res.json())
     .then(res => {
         this.getCategorias(user.rut)
-        this.setState({ visualizacion: 'default', nombresubcategoria: '', nombrecategoria: '', comboseleccionado: '', categoriaseleccionada: '' })
+        if(tipo!=='producto'){
+            this.setState({ visualizacion: 'default', nombresubcategoria: '', nombrecategoria: '', comboseleccionado: '', categoriaseleccionada: '' })
+        }
         return toast.success('Eliminado exitosamente', this.state.toaststyle)
     })
     .catch(error => {
@@ -593,7 +599,7 @@ formularioNuevoProducto(){
 
             const seleccionado = combos[findi].categorias[posicionproductos]
 
-            return <div className="contenedor">
+            return <div className="contener mt-4">
             <span onClick={()=>this.setState({ visualizacion: 'default' })} ><i className="fas fa-arrow-left"></i> Atrás</span>
             <h4 className="etiqueta">Categoría seleccionada: {seleccionado.titulo}</h4>
             <h3>Crear producto</h3>
@@ -655,7 +661,7 @@ formularioNuevoProducto(){
     if(findi > -1){
 
             const seleccionado = combos[findi]
-            return <div className="contenedor">
+            return <div className="contener">
             <span onClick={()=>this.setState({ visualizacion: 'default' })} ><i className="fas fa-arrow-left"></i> Atrás</span>
             <h4 className="etiqueta">Categoría seleccionada: {seleccionado.titulo}</h4>
             <h3>Crear producto</h3>
@@ -718,7 +724,7 @@ formularioNuevaSubCategoria(){
     if(findi > -1){
 
             const seleccionado = combos[findi]
-            return <div className="contenedor">
+            return <div className="contener mt-4">
             <span onClick={()=>this.setState({ visualizacion: 'default' })} ><i className="fas fa-arrow-left"></i> Atrás</span>
             <h4 className="etiqueta" >Categoría seleccionada: {seleccionado.titulo}</h4>
             <h3>Nueva sub categoría</h3>
@@ -738,7 +744,7 @@ formularioNuevaSubCategoria(){
 
 formularioNuevaCategoria(){
     const { nombrecategoria } = this.state
-    return <div className="contenedor">
+    return <div className="contener mt-4">
     <span onClick={()=>this.setState({ visualizacion: 'default' })} ><i className="fas fa-arrow-left"></i> Atrás</span>
     <h3>Nueva categoría</h3>
 
@@ -1065,6 +1071,23 @@ handleChangeReporte(e){
 
             return this.setState({ seleccionvariable: producto })
 
+        } else if (producto.tipo === 'agrupado'){
+
+            const costo = producto.precio_oferta ? parseFloat(producto.precio_oferta) : parseFloat(producto.precio_regular)
+
+            const agregar = {
+                nombre: producto.titulo,
+                precio: costo,
+                Precio: costo,
+                codigo: 1,
+                estado: 1,
+                exento: "",
+            }
+            carrito.push(agregar);
+
+            this.setState({ cargandoboleta: false, carrito, filter: "" });
+            return localStorage.setItem('carrito', JSON.stringify(carrito));
+
         }
 
 
@@ -1171,7 +1194,7 @@ handleChangeReporte(e){
                     return <tr key={'cart'+i} className="productos-unitario">
                     <td style={{ width: 30 }}><a onClick={() => this.removerDelCarrito(i)} href="javascript:void(0)"><i className="fas fa-minus-circle"></i></a></td>
                     <td style={{ textAlign: 'left'}}><p id={i}>1 {pro.nombre}  </p></td>
-                    <td style={{ textAlign: 'right'}}><input type="number" defaultValue={pro.precio} name={i} onChange={this.handleChangeProducto} /></td>
+                    <td style={{ textAlign: 'right'}}><h3 className="precio nomargin">${Intl.NumberFormat(["ban", "id"]).format(pro.precio)}</h3> </td>
                 </tr>
                 })}
 </table>
@@ -1508,7 +1531,7 @@ handleChangeReporte(e){
             //return <p>Sin boletas en Cola</p>;
         }
         
-        return <div>
+        return <div className="col-md-12 col-md-12"><div>
 
 <div className="collapse padding5" id="collapseExample">
   <div className="card card-body">
@@ -1516,6 +1539,7 @@ handleChangeReporte(e){
   {this.buttonSync()}
   </div>
 </div>
+        </div>
         </div>
     }
     
@@ -1691,8 +1715,10 @@ handleChangeReporte(e){
 
             if (this.state.loading || this.state.TipoDocumento === "") {
                 return <div className="cargando">
-                    <h1 style={{color: 'white', color: 'black', fontWeight: 600, lineHeight: '10px', fontSize: 60}} className="nuppy" >NUPY</h1>
-                    <h3 style={{color: 'black', fontWeight: 600}}>CARGANDO</h3>
+                    <div className="loading3 ">
+                        <img src="loading.gif" />
+                    </div>
+                    <h1 style={{color: 'white', marginTop:40, color: 'black', fontWeight: 600, lineHeight: '10px', fontSize: 60}} className="nuppy" >NUPY</h1>
                     {this.botonesTipoPago()}
                     </div>
             }
@@ -1705,37 +1731,29 @@ handleChangeReporte(e){
         const { cargandoboleta, vistapos, TipoDocumento, loadingreporte, anoreporte, mesreporte, reportediario, formula} = this.state
 
         return (
-            <div>
+            <div className="fullheight">
                 <ToastContainer />   
-                <div className={`celeste ${this.showAll()}`}>
-                <div className="row ">
-                    <div className="col-md-12 col-md-12">
-                            <h2 className="titulocarrito titulocart">NUPY <b className="boletasimple">{this.state.TipoDocumento}</b></h2>
-                            <button className="configbutton" type="button" data-toggle="collapse" data-target="#configmodule" aria-expanded="false" aria-controls="configmodule">
+                 <div className={`celeste  ${this.showAll()}`}>
+               <div className="row fullheight">
+                    <div className="col-md-12 col-md-12 barrasuperior fullheight">
+                            <h2 className="titulocarrito nomargin titulocart">NUPY <b className="boletasimple">SISTEMA POS</b></h2>
+                            { /* <button className="configbutton" type="button" data-toggle="collapse" data-target="#configmodule" aria-expanded="false" aria-controls="configmodule">
                             <i className="fas fa-cog"></i>
-                            </button>
-                            {this.verColaBoton()}
-                            
-                            { /* <Link style={{ float: "right", marginTop: -35 }} to="/login">Salir</Link> */}
-                            
-
-                            
-                            <p className="clear"></p>
-                            
+                            </button> */}
+                            {this.verColaBoton()}                                                    
                         </div>
-                        <div className="col-md-12 col-md-12">
                         {this.verCola()}
-                        </div>
-                    </div>
-                </div>
-                <div className="azuloscuro">
+                        
+                    </div> 
+        </div> 
+                <div className="azuloscuro fullheight">
 
                 <Renderizar />
-                <div className={this.showAll()}>
-                <div className="row nomargin">
+                <div className={`fullheight ${this.showAll()}`}>
+                <div className="row nomargin fullheight">
 
         <div className="collapse " id="configmodule">
-  <div className="contenedor">
+  <div className="contener">
         
   <div className="col-md-12 col-md-12">
             <h2>Configuración</h2>
@@ -1838,8 +1856,8 @@ handleChangeReporte(e){
     </div>
 
 </div>
-<div className="row"> 
-{TipoDocumento === 'Boleta Simple' ? <div className="col-md-12"> 
+<div className="row fullheight"> 
+{TipoDocumento === 'Boleta Simple' ? <div className="col-md-12 fullheight"> 
 
 
 <div className="calc">
@@ -1870,34 +1888,36 @@ handleChangeReporte(e){
   </div>
 </div>
 
-</div> : <div className="col-md-12">
+</div> : <div className="col-md-12 fullheight">
 
 
-<div className="row">
+<div className="row fullheight">
 
 {
-                            vistapos === true ? <div className="col-md-7" > 
+                            vistapos === true ? <div className="col-md-7 fullheight" style={{ paddingRight: 0 }} > 
 
 {this.tipoVisualizacion()}
 
                         </div> : false
                         }
 
-<div className={`nopadding ${vistapos === true ? 'col-md-5': 'col-md-12' } `}>
+<div className={`lateral nopadding fullheight ${vistapos === true ? 'col-md-5': 'col-md-12' } `}>
                     
                             
-<div className="productosenelcarrito">
-<h4 className="contadorcart">{this.state.carrito.length} Productos en el carrito</h4>
+<div className="productosenelcarrito fullheight">
+<div className="contadorproductos">
+<h4 className="contadorcart nomargin">{this.state.carrito.length} Productos en el carrito</h4>
+</div>
 {this.mostrarCarritoEditar()}
 
                      
-
+<div className="contener2">
                             <div className="form-group">
                                 <label className="form-label">DESCUENTO - Porcentaje</label>
                                 <input placeholder="DESCUENTO" className="form-control botontransparente" onChange={this.handleDescuento} />
                             </div>
 
-                                <div className="row" style={{ marginBottom: 10 }}>
+                                <div className="rows" style={{ marginBottom: 10 }}>
 
                                 <div className="col-xs-4">
                                 <label className="mayuscula singrosor form-label">Monto</label>
@@ -1914,8 +1934,8 @@ handleChangeReporte(e){
                             <h2 className="monto">{Intl.NumberFormat(["ban", "id"]).format(final)}</h2>
                             </div>
                                 </div>
-                            
                             { cargandoboleta ? <h4 className="loading">Cargando</h4> : <button className="pagar btn btn-sucess" onClick={() => this.handleSubmit()}>FINALIZAR Y PAGAR </button> }
+                                </div>
 </div>
                         </div>
 

@@ -9,7 +9,7 @@ class App extends React.Component {
     render() {
         return (
             <Router >
-            <div>
+            <div className="fullheight">
                 <PrivateRoute  exact path={`/`} component={HomePage} />
                 <Route path={`/login`} component={LoginPage} />
             </div>
