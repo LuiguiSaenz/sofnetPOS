@@ -60,34 +60,34 @@ class LoginPage extends React.Component {
     render() {
         const { username, password, rut, submitted, loading, error } = this.state;
         return (
-            <div style={{ padding: 40 }} className="col-md-6 col-md-offset-3 text-white">
+            <div style={{ padding: 40 }} className="col-md-6 col-md-offset-3 text-dark">
                 <ToastContainer /> 
-                <h1 style={{color: 'white', fontWeight: 600, lineHeight: '10px', fontSize: 60}} className="nuppy text-white">NUPY</h1>
-                <h2 style={{color: 'white'}}>Iniciar Sesión</h2>
+                <h1 style={{color: 'black', fontWeight: 600, lineHeight: '10px', fontSize: 60}} className="nuppy text-white">NUPY</h1>
+                <h2 style={{color: 'black'}}>Iniciar Sesión</h2>
                 <form name="form" onSubmit={this.handleSubmit}>
                     <div className={'form-group' + (submitted && !username ? ' has-error' : '')}>
-                        <label htmlFor="username" style={{color: 'white'}}>Usuario</label>
+                        <label htmlFor="username" style={{color: 'black'}}>Usuario</label>
                         <input type="text" className="form-control" name="username" value={username} onChange={this.handleChange} />
                         {submitted && !username &&
                             <div className="help-block">Usuario es requerido</div>
                         }
                     </div>
                     <div className={'form-group' + (submitted && !rut ? ' has-error' : '')}>
-                        <label htmlFor="rut" style={{color: 'white'}}>RUT</label>
+                        <label htmlFor="rut" style={{color: 'black'}}>RUT</label>
                         <input type="text" className="form-control" name="rut" value={rut} onChange={this.handleChange} />
                         {submitted && !rut &&
                             <div className="help-block">Rut es requerido</div>
                         }
                     </div>
                     <div className={'form-group' + (submitted && !password ? ' has-error' : '')}>
-                        <label htmlFor="password" style={{color: 'white'}}>Contraseña</label>
+                        <label htmlFor="password" style={{color: 'black'}}>Contraseña</label>
                         <input type="password" className="form-control" name="password" value={password} onChange={this.handleChange} />
                         {submitted && !password &&
                             <div className="help-block">Contraseña es requerida</div>
                         }
                     </div>
                     <div className="form-group">
-                        <button className="btn btn-primary" disabled={loading}>ENTRAR</button>
+                        <button className="btn btn-primary" style={{ width: '100%', padding: 10 }} disabled={loading}>ENTRAR</button>
                         {loading &&
                             <img alt="a" src="data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA==" />
                         }

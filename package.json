@@ -1,6 +1,6 @@
 {
   "name": "nupypos",
-  "version": "20.1.0",
+  "version": "22.2.0",
   "private": true,
   "homepage": "http://pos.nupy.cl",
   "dependencies": {

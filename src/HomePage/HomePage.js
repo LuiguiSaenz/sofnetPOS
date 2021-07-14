@@ -168,7 +168,25 @@ class HomePage extends React.Component {
             nuevaopcion: '',
             arrayopciones: [],
             cantidadopcion: 0,
-            activaredicion: false
+            activaredicion: false,
+            visualizarlistadoproductos: '',
+            tiponuevoproducto: '',
+            temporalproducto: false,
+            cat: false,
+            loadingPedidos: true,
+            pedidos: [],
+            veinte: '0',
+            diez: '0',
+            cinco: '0',
+            dos: '0',
+            mil: '0',
+            quinientos: '0',
+            cien: '0',
+            cincuenta: '0',
+            loadingCuadratura: false,
+            tipopago: 'efectivo',
+            ultimacuadratura: false,
+            nuevacuadratura: false
         };
 
         //this.handleSubmit = this.handleSubmit.bind(this);
@@ -186,14 +204,14 @@ class HomePage extends React.Component {
 
 handleChangeState(e){
     const { name, value } = e.target
-    
+    const { user } = this.state
     if(name==='tipoproducto'){
         if(value==='simple' ||value==='agrupado'){
             this.setState({ arrayitems: [] })
         }
-    }
-    
-    
+    } else if(name==='fechavisualizacion'){
+        this.obtenerPedidos(user.rut, this.formatDate(new Date(value)))
+    }    
     this.setState({ [name]: value })
 }
 
@@ -328,6 +346,26 @@ mostrarSubCategoria(categoriaseleccionada){
     }
 }
 
+obtenerPedidos(propietario, fecha){
+    this.setState({ loadingPedidos: true })
+    return fetch(`https://us-west-2.aws.webhooks.mongodb-realm.com/api/client/v2.0/app/nupy-cfbnr/service/restaurant/incoming_webhook/web_PedidosByPropietario?propietario=${propietario}&fecha=${fecha}`)
+    .then(res => res.text())
+    .then(res => {
+        const orders = JSON.parse(res)
+        if(orders==='[]'){
+            return this.setState({ pedidos: [], loadingPedidos: false })
+        }
+
+        const jsonpedidos = JSON.parse(orders)
+        return this.setState({ pedidos: jsonpedidos, loadingPedidos: false })
+    })
+    .catch(error => {
+        this.setState({ loadingPedidos: false })
+        toast.error('Ocurrió un problema al realizar esta operación', this.state.toaststyle)
+    })
+
+}
+
 eliminarElemento(id, tipo){
     const { user } = this.state
     this.setState({ loadingCategorias: true })
@@ -341,7 +379,6 @@ eliminarElemento(id, tipo){
         return toast.success('Eliminado exitosamente', this.state.toaststyle)
     })
     .catch(error => {
-        console.log(error)
         this.setState({ loadingCategorias: false })
         toast.error('Ocurrió un problema al realizar esta operación', this.state.toaststyle)
     })
@@ -356,23 +393,410 @@ nuevaSubCategoria(){
     return this.setState({ visualizacion: 'nuevasubcategoria' })
 }
 
+mostrarPedidos(){
+    const { loadingPedidos, pedidos } = this.state
+
+    if(loadingPedidos) return <div className="loading3">
+    <img src="loading.gif" />
+    <h3>Cargando...</h3>
+    </div>
+
+    if(pedidos.length < 1) return <h1>Sin pedidos encontrados</h1>
+
+    let mediospago = {}
+    pedidos.map(pedido => {
+        if(!mediospago[pedido.Adicional.Uno]){
+            const nombreMenu = mediospago[pedido.Adicional.Uno]
+            mediospago[pedido.Adicional.Uno] = { nombre: nombreMenu }
+            mediospago[pedido.Adicional.Uno].pedidos = []
+        }
+        mediospago[pedido.Adicional.Uno].pedidos.push(pedido)
+    })
+
+    const tipospago = Object.keys(mediospago)
+
+    return <div className="contenedor-productos">
+        <h1 style={{ margin: '20px 0px 0px 0px', fontSize: 23 }}>{pedidos.length} Pedidos</h1>
+        {
+            Array.isArray(pedidos) ? <div>
+
+<div className="row">
+
+<div className="col-md-12">
+    <h1>Formas de pago</h1>
+</div>
+{
+    tipospago.map((tipopa,ip) =>{
+
+        let totalneto = 0
+        if(mediospago[tipopa].pedidos){
+            if(Array.isArray(mediospago[tipopa].pedidos)){
+                if(mediospago[tipopa].pedidos.length > 0){
+
+                    mediospago[tipopa].pedidos.map(orden => {
+            
+                    if(isNaN(orden.Encabezado.MontoNeto) !== true) totalneto = totalneto + orden.Encabezado.MontoNeto
+
+                    })  
+
+                }
+            }
+        }      
+
+        return <div className="col-md-3" key={`tipopago-${ip}`}>
+            <h3 className="nomargin subtitulo">{tipopa}</h3>
+            <h1 className="nomargin">{mediospago[tipopa].pedidos.length} Pedidos</h1>
+            <h1 className="nomargin">Total neto:</h1>
+            <h1 className="monto">${Intl.NumberFormat(["ban", "id"]).format(totalneto)}</h1>
+            </div>
+    })
+}
+
+</div>
+
+<table >
+    <thead>
+                    <tr>
+                        <th>FOLIO</th>
+                        <th>PRODUCTOS</th>
+                        <th>FECHA</th>
+                        <th>DTE</th>
+                        <th>NETO</th>
+                    </tr>
+    </thead>
+    <tbody>
+    {
+                    pedidos.map((pedido,ipe) => {
+                        return <tr>
+                        <th>{pedido.folio}</th>
+                        <th>{pedido.Detalle.length}</th>
+                        <th>{pedido.fecha}</th>
+                        <th>{pedido.Adicional.Uno}</th>
+                        <th>{Intl.NumberFormat(["ban", "id"]).format(pedido.Encabezado.MontoNeto)}</th>
+                        </tr>
+                    })
+                }
+    </tbody>
+                </table>
+                
+            </div> : false
+        }
+    </div>
+
+    
+
+}
+
 tipoVisualizacion(){
-    const { visualizacion, comboseleccionado, loadingCategorias } = this.state
+    const { visualizacion, comboseleccionado, visualizarlistadoproductos, loadingCategorias } = this.state
 
     if(loadingCategorias) return <div className="loading3">
         <img src="loading.gif" />
         <h3>Cargando...</h3>
     </div>
 
+    if(visualizarlistadoproductos===true) return this.mostrarBuscadorProductos()
     if(visualizacion==='default') return this.mostrarCombos()
     if(visualizacion==='nuevacategoria') return this.formularioNuevaCategoria()
     if(visualizacion==='nuevasubcategoria') return this.formularioNuevaSubCategoria()
     if(visualizacion==='nuevoproducto') return this.formularioNuevoProducto()
+    if(visualizacion==='pedidos') return this.vistaPedidos()
+    if(visualizacion==='caja') return this.vistaCaja()
+
+
 
 }
 
+vistaCaja(){
+    const { veinte, diez, nuevacuadratura, loadingCuadratura, cinco, dos, mil, quinientos, cien, cincuenta } = this.state
+    return <div className="contener mt-4">
+<span onClick={()=>this.setState({ visualizacion: 'default' })} ><i className="fas fa-arrow-left"></i> Atrás</span>
+
+<div className="cuadrobuscador">
+    
+<h1 style={{ fontSize: 20 }}>Cuadratura de caja</h1>
+    <button className="btn btn-agregar" onClick={() => this.setState({ nuevacuadratura: nuevacuadratura ? false : true })}>NUEVA CUADRATURA</button>
+    <p>Para abrir la caja debes contar la cantidad de billetes y monedas de cada denominación.</p>
+
+{
+    nuevacuadratura===true ? <div className="row">
+
+
+<div className="col-md-2">
+    <img className="billete" src="billete-20.jpg" style={{ marginBottom: 20 }} />
+    <h2 className="nomargin">$20.000</h2>
+    <input type="number" name="veinte" value={veinte} min="0" className="form-control" onChange={this.handleChangeState} />
+</div>
+
+<div className="col-md-2">
+    <img className="billete" src="billete-10.jpg" style={{ marginBottom: 20 }} />
+    <h2 className="nomargin">$10.000</h2>
+    <input type="number" name="diez" value={diez} min="0" className="form-control" onChange={this.handleChangeState} />
+</div>
+
+<div className="col-md-2">
+    <img className="billete" src="billete-5.jpg" style={{ marginBottom: 20 }}  />
+    <h2 className="nomargin">$5.000</h2>
+    <input type="number" name="cinco" value={cinco} min="0" className="form-control" onChange={this.handleChangeState} />
+</div>
+
+<div className="col-md-2">
+    <img className="billete" src="billete-2.jpg" style={{ marginBottom: 20 }}  />
+    <h2 className="nomargin">$2.000</h2>
+    <input type="number" name="dos" value={dos} min="0" className="form-control" onChange={this.handleChangeState} />
+</div>
+
+<div className="col-md-2">
+    <img className="billete" src="billete-1.jpg" style={{ marginBottom: 20 }}  />
+    <h2 className="nomargin">$1.000</h2>
+    <input type="number" name="mil" value={mil} min="0" className="form-control" onChange={this.handleChangeState} />
+</div>
+
+<div className="col-md-2">
+    <img className="billete" src="moneda-500.png" style={{ marginBottom: 20 }}  />
+    <h2 className="nomargin">$500</h2>
+    <input type="number" name="quinientos" value={quinientos} min="0" className="form-control" onChange={this.handleChangeState} />
+</div>
+
+<div className="col-md-2">
+    <img className="billete" src="moneda-100.png" style={{ marginBottom: 20 }}  />
+    <h2 className="nomargin">$100</h2>
+    <input type="number" name="cien" value={cien} min="0" className="form-control" onChange={this.handleChangeState} />
+</div>
+
+<div className="col-md-2">
+    <img className="billete" src="moneda-50.png" style={{ marginBottom: 20 }}  />
+    <h2 className="nomargin">$50</h2>
+    <input type="number" name="cincuenta" value={cincuenta} min="0" className="form-control" onChange={this.handleChangeState} />
+</div>
+
+<div className="col-md-12">
+<hr />
+{ loadingCuadratura ? <div className="loading3 ">
+                        <img src="loading.gif" />
+                    </div> : <button className="btn btn-success" onClick={()=>this.confirmarCuadratura()} >CONFIRMAR</button> }
+
+    </div>
+
+
+    </div> : <div className="col-md-12" style={{ paddingLeft: 0, paddingRight: 0 }}>
+
+        { loadingCuadratura ? <div className="loading3">
+    <img src="loading.gif" />
+    <h3>Cargando datos de última cuadratura...</h3>
+    </div> : false }
+
+    <div className="card">
+    {this.vistaUltimaCuadratura()}
+    </div>
+
+</div>
+}
+
+</div>
+    </div>
+}
+
+vistaUltimaCuadratura(){
+    const { ultimacuadratura } = this.state
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    if(!ultimacuadratura) return false
+    
+    const date = new Date(ultimacuadratura.creacion)
+    const veinte = ultimacuadratura.veinte ? ultimacuadratura.veinte * 20000 : 0
+    const diez = ultimacuadratura.diez ? ultimacuadratura.diez * 10000 : 0
+    const cinco = ultimacuadratura.cinco ? ultimacuadratura.cinco * 5000 : 0
+    const dos = ultimacuadratura.dos ? ultimacuadratura.dos * 2000 : 0
+    const mil = ultimacuadratura.mil ? ultimacuadratura.mil * 1000 : 0
+    const quinientos = ultimacuadratura.quinientos ? ultimacuadratura.quinientos * 500 : 0
+    const cien = ultimacuadratura.cien ? ultimacuadratura.cien * 100 : 0
+    const cincuenta = ultimacuadratura.cincuenta ? ultimacuadratura.cincuenta * 50 : 0
+    const totalneto = veinte + diez + cinco + dos + mil + quinientos + cien + cincuenta
+
+    return <div>
+
+        <div className="row">
+
+        <div className="col-md-12" >
+        <h2 className="nomargin">Última cuadratura:</h2>
+    <p className="subtitulo">{date.toLocaleDateString('es-ES', options)} {date.getHours()}</p>
+    <h2 className="nomargin">TOTAL:</h2>
+    <p className="subtitulo">${Intl.NumberFormat(["ban", "id"]).format(totalneto)}</p>
+
+</div>
+            
+        <div className="col-md-2">
+    <h2 className="nomargin">$20.000 </h2>
+    <p className="subtitulo">{ultimacuadratura.veinte ? ultimacuadratura.veinte : '0'}</p>
+</div>
+
+<div className="col-md-2">
+    <h2 className="nomargin">$10.000</h2>
+        <p className="subtitulo">{ultimacuadratura.diez ? ultimacuadratura.diez : '0'}</p>
+
+</div>
+
+<div className="col-md-2">
+    <h2 className="nomargin">$5.000</h2>
+        <p className="subtitulo">{ultimacuadratura.cinco ? ultimacuadratura.cinco : '0'}</p>
+
+</div>
+
+<div className="col-md-2">
+    <h2 className="nomargin">$2.000</h2>
+        <p className="subtitulo">{ultimacuadratura.dos ? ultimacuadratura.dos : '0'}</p>
+
+</div>
+
+<div className="col-md-2">
+    <h2 className="nomargin">$1.000</h2>
+        <p className="subtitulo">{ultimacuadratura.mil ? ultimacuadratura.mil : '0'}</p>
+
+</div>
+
+<div className="col-md-2">
+    <h2 className="nomargin">$500</h2>
+        <p className="subtitulo">{ultimacuadratura.quinientos ? ultimacuadratura.quinientos : '0'}</p>
+
+</div>
+
+<div className="col-md-2">
+    <h2 className="nomargin">$100</h2>
+        <p className="subtitulo">{ultimacuadratura.cien ? ultimacuadratura.cien : '0'}</p>
+
+</div>
+
+<div className="col-md-2">
+    <h2 className="nomargin">$50</h2>
+        <p className="subtitulo">{ultimacuadratura.cincuenta ? ultimacuadratura.cincuenta : '0'}</p>
+
+</div>
+
+
+        </div>
+    </div>
+
+}
+
+confirmarCuadratura(){
+    const { veinte, diez, cinco, dos, mil, quinientos, cien, cincuenta, user } = this.state
+
+    let faltantes = []
+    if(!veinte) faltantes.push('20.000')
+    if(!diez) faltantes.push('10.000')
+    if(!cinco) faltantes.push('5.000')
+    if(!dos) faltantes.push('2.000')
+    if(!mil) faltantes.push('1.000')
+    if(!quinientos) faltantes.push('500')
+    if(!cien) faltantes.push('100')
+    if(!cincuenta ) faltantes.push('50')
+
+    // NUMERO
+
+    if(faltantes.length > 0) return toast.error(`Faltan información de las siguientes denominaciones: ${faltantes.join(', ')}`, this.state.toaststyle)
+
+    this.setState({ loadingCuadratura: true })
+    return fetch('https://us-west-2.aws.webhooks.mongodb-realm.com/api/client/v2.0/app/nupy-cfbnr/service/restaurant/incoming_webhook/web_crearCuadratura', {
+        method: 'POST',
+        body: JSON.stringify({
+            propietario: user.rut.toString(),
+            creacion: new Date().toString(),
+            fecha_string: this.formatDate(new Date()),
+            veinte: parseInt(veinte),
+            diez: parseInt(diez),
+            cinco: parseInt(cinco),
+            dos: parseInt(dos),
+            mil: parseInt(mil),
+            quinientos: parseInt(quinientos),
+            cien: parseInt(cien),
+            cincuenta: parseInt(cincuenta),
+            user: user
+        }),
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(res => res.json())
+    .then(res => {
+
+        this.setState({ loadingCuadratura: false, veinte: '0', diez: '0', cinco: '0', dos: '0', mil: '0', quinientos: '0', cien: '0', cincuenta: '0', nuevacuadratura: false })
+        this.obtenerUltimaCuadratura(user.rut)
+        return toast.success('Creado exitosamente', this.state.toaststyle)
+    })
+    .catch(error => {
+        this.setState({ loadingCuadratura: false })
+        toast.error('Ocurrió un problema al realizar esta operación', this.state.toaststyle)
+    })
+
+}
+
+vistaPedidos(){
+
+    return <div className="contener mt-4">
+<span onClick={()=>this.setState({ visualizacion: 'default' })} ><i className="fas fa-arrow-left"></i> Atrás</span>
+
+<div className="cuadrobuscador">
+    
+        <label className="form-control-label">Fecha de visualización</label>
+        <input type="date" className="form-control" name="fechavisualizacion" onChange={this.handleChangeState} />
+
+        { this.mostrarPedidos() }
+
+</div>
+    </div>
+}
+
+mostrarBuscadorProductos(){
+    const { filter, productos } = this.state;
+        const lowercasedFilter = filter.toLowerCase();
+        const productosFiltrados = productos.filter(item => {
+            return Object.keys(item).some(key =>
+                item[key].toString().toLowerCase().includes(lowercasedFilter)
+            );
+        });
+
+    return <div className="contener mt-4">
+
+<span onClick={()=>this.setState({ visualizarlistadoproductos: false })} ><i className="fas fa-arrow-left"></i> Atrás</span>
+
+    <div className="cuadrobuscador">
+
+    
+    
+
+    <input  placeholder="BUSCAR PRODUCTOS" className="form-control" value={filter} onChange={this.handleChange} />
+    <div className="contenedor-productos">
+        {productosFiltrados.map((info, i) => {
+            return <div className="boxproducto" key={'filtrados'+i} onClick={() => this.seleccionarProducto(info)} key={i}><h4 className="left" > {info.nombre} </h4><p className="hide">{info.codigo} </p> <h4 className="right">{Intl.NumberFormat(["ban", "id"]).format(info.precio)} </h4></div>;
+        })}
+    </div>
+
+    </div>
+
+    </div>
+}
+
+seleccionarProducto(producto){
+    const { tiponuevoproducto, cat} = this.state
+
+    producto.precio_regular = producto.precio
+    producto.titulo = producto.nombre
+    if(tiponuevoproducto==='nuevo'){
+
+        return this.setState({ visualizarlistadoproductos: false, tipoproducto:'simple', temporalproducto: producto, nombreproducto: producto.nombre, precio_regular: producto.precio, precio_oferta: producto.precio_oferta })
+
+    } else if(tiponuevoproducto==='variable'){
+
+        const { arrayopciones } = this.state
+        if(!arrayopciones[cat].opciones) arrayopciones[cat].opciones = []
+        arrayopciones[cat].opciones.push(producto)
+        return this.setState({ visualizarlistadoproductos: false, arrayopciones })
+
+    }
+}
+
 crearProducto(){
-    const { nombreproducto, user, tipoproducto, precio_regular, precio_oferta, arrayitems, arrayopciones, comboseleccionado } = this.state
+    const { nombreproducto, user, tipoproducto, precio_regular, temporalproducto, precio_oferta, arrayitems, arrayopciones, comboseleccionado } = this.state
 
     if(!tipoproducto || !nombreproducto || !precio_regular) return toast.error('Faltan campos por rellenar', this.state.toaststyle)
 
@@ -383,6 +807,18 @@ crearProducto(){
         precio_regular: precio_regular ? precio_regular.toString() : '',
         precio_oferta: precio_oferta ? precio_oferta.toString() : '',
         propietario: user.rut
+    }
+
+    if(tipoproducto==='simple'){
+        if(temporalproducto){
+            if(temporalproducto.familia_id) nuevoproducto.familia_id = temporalproducto.familia_id.toString()
+            if(temporalproducto.linea_id) nuevoproducto.linea_id = temporalproducto.linea_id.toString()
+            if(temporalproducto.marca_id) nuevoproducto.marca_id = temporalproducto.marca_id.toString()
+            if(temporalproducto.sub_familia_id) nuevoproducto.sub_familia_id = temporalproducto.sub_familia_id.toString()
+            if(temporalproducto.tipo_producto_id) nuevoproducto.tipo_producto_id = temporalproducto.tipo_producto_id.toString()
+            if(temporalproducto.unidad_medida_id) nuevoproducto.unidad_medida_id = temporalproducto.unidad_medida_id.toString()
+            if(temporalproducto.codigo) nuevoproducto.codigo = temporalproducto.codigo.toString()
+        }
     }
 
     if(tipoproducto==='agrupado'){
@@ -508,6 +944,9 @@ if(tipoproducto==='variable') return <div>
                 }
 
                 <p className="mb-0">Agrega las opciones</p>
+
+                <button className="btn btn-agregar" onClick={()=>this.setState({ visualizarlistadoproductos: true, tiponuevoproducto: 'variable', cat: iop })}>BUSCAR PRODUCTOS</button>
+
                 <div className="row">
 
 <div className="col-md-9">
@@ -600,13 +1039,11 @@ formularioNuevoProducto(){
             const seleccionado = combos[findi].categorias[posicionproductos]
 
             return <div className="contener mt-4">
-            <span onClick={()=>this.setState({ visualizacion: 'default' })} ><i className="fas fa-arrow-left"></i> Atrás</span>
+            <span onClick={()=>this.setState({ visualizacion: 'default', temporalproducto: false })} ><i className="fas fa-arrow-left"></i> Atrás</span>
             <h4 className="etiqueta">Categoría seleccionada: {seleccionado.titulo}</h4>
             <h3>Crear producto</h3>
-    
-            
 
-            
+            <button className="btn btn-agregar" onClick={()=>this.setState({ visualizarlistadoproductos: true, tiponuevoproducto: 'nuevo' })}>BUSCAR PRODUCTOS</button>
 
             <div className="row">
 
@@ -825,14 +1262,14 @@ mostrarCombos(){
 
     if(loadingCombos) return <h4 className="loading">Cargando</h4>
 
-    if(combos.length > 0) return <div>
+     return <div>
 
 <div className="scrollmenu">
 <span onClick={()=>this.nuevaCategoria()} className="porseleccionar"><i className="fas fa-plus-circle"></i> NUEVO</span>
     {
-        combos.map((combo,icombo) => {
+        combos.length > 0 ? combos.map((combo,icombo) => {
             return <span className={ ` ${categoriaseleccionada === combo._id['$oid'] ? 'seleccionado' : 'porseleccionar' }` } onClick={()=>this.setState({ categoriaseleccionada: combo._id['$oid'], comboseleccionado: '' })}>{combo.titulo}</span>
-        })
+        }) : false
     }
     
     </div>
@@ -891,7 +1328,6 @@ handleChangeReporte(e){
       result = math.eval(mathString)
     }
     catch(err){
-      console.log(err)
       result = ''
     }
     return result
@@ -915,14 +1351,38 @@ handleChangeReporte(e){
         return this.setState({ carrito: carrito })
     }
 
-    getCategorias(propietario) {
 
+
+    obtenerUltimaCuadratura(propietario){
+        this.setState({ loadingCuadratura: true })
+        return fetch(`https://us-west-2.aws.webhooks.mongodb-realm.com/api/client/v2.0/app/nupy-cfbnr/service/restaurant/incoming_webhook/web_getUltimaCuadratura?propietario=${propietario}`)
+        .then(res => res.text())
+        .then(res => {
+            const orders = JSON.parse(res)
+            if(orders==='[]'){
+                return this.setState({ ultimacuadratura: false, loadingCuadratura: false })
+            }
+    
+            const jsonpedidos = JSON.parse(orders)
+            console.log(jsonpedidos)
+            return this.setState({ ultimacuadratura: jsonpedidos, loadingCuadratura: false })
+        })
+        .catch(error => {
+            this.setState({ loadingCuadratura: false })
+            toast.error('Ocurrió un problema al realizar esta operación', this.state.toaststyle)
+        })
+    
+    }
+
+
+    getCategorias(propietario) {
         this.setState({ loadingCategorias: true })
         return fetch(`https://us-west-2.aws.webhooks.mongodb-realm.com/api/client/v2.0/app/nupy-cfbnr/service/restaurant/incoming_webhook/nupy_categorias?propietario=${propietario}`)
             .then(categorias => categorias.json())
             .then(datos => {
 //                const datos = JSON.parse(categorias)
                 console.log(datos)
+                
                 this.setState({ loadingCategorias: false, combos: datos })
             })
             .catch(error => {
@@ -947,7 +1407,6 @@ handleChangeReporte(e){
                 this.setState({ datosempresa: datosempresa[0] })
             })
             .catch(error => {
-                console.log(error)
                 toast.error('Ocurrió un problema al consultar los datos de la empresa', this.state.toaststyle)
             });
     }
@@ -984,6 +1443,7 @@ handleChangeReporte(e){
         })
             .then(bod => bod.json())
             .then(bod => {
+                console.log(bod)
                 this.setState({ bodega: bod, inputBodega: bod[0].id })
             })
             .catch(error => {
@@ -1001,6 +1461,7 @@ handleChangeReporte(e){
         })
             .then(pago => pago.json())
             .then(pago => {
+                console.log(pago)
                 this.setState({ formapago: pago, inputPago: pago[0].id })
             })
             .catch(error => {
@@ -1018,7 +1479,6 @@ handleChangeReporte(e){
         })
             .then(vend => vend.json())
             .then(vend => {
-                console.log(vend)
                 this.setState({ vendedores: vend, inputVendedor: vend[0].rut_vendedor })
             })
             .catch(error => {
@@ -1235,7 +1695,8 @@ handleChangeReporte(e){
         this.getAreaNegocio(tokenReceived)
         toast.success('Bienvenido', this.state.toaststyle)
         this.getCategorias(user.rut)
-        console.log(this.convertMonth(parseInt('01')))
+        console.log([ user.rut, this.formatDate(new Date()) ])
+        this.obtenerPedidos(user.rut, this.formatDate(new Date()))
     }
 
     handleChange = event => {
@@ -1273,7 +1734,6 @@ handleChangeReporte(e){
         let cola = JSON.parse(localStorage.getItem('cola'));
         const longitud = cola.length
         cola.forEach((boletaArray,i) => {
-            console.log(i)
             this.syncBoleta(boletaArray)
             if(i+1 === longitud){
                 return this.setState({ sincronizando: false})
@@ -1283,7 +1743,7 @@ handleChangeReporte(e){
     }
 
 
-    syncBoleta(enviarBoleta){
+    async syncBoleta(enviarBoleta){
         let colastate = this.state.cola;
 
         let token = this.state.token.token;
@@ -1296,13 +1756,14 @@ handleChangeReporte(e){
             body: JSON.stringify( enviarBoleta )
         })
             .then(pros => pros.json())
-            .then(pros => {
+            .then(async pros => {
                 console.log(pros)
                 if(!pros[0]){
                     this.setState({ cargandoboleta: false });
                     
                     return false
                 }
+                const guardarpedidomongo = await this.guardarMongo(enviarBoleta, pros[0]) 
                 var removeIndex = colastate.map(function(item) { return item[0].fecha; }).indexOf(enviarBoleta[0].fecha);
 
                 colastate.splice(removeIndex, 1);
@@ -1314,6 +1775,7 @@ handleChangeReporte(e){
                 }
             })
             .catch(error => {
+                console.log(error)
                 toast.error('Ocurrió un problema al consultar los datos', this.state.toaststyle)
 
             });
@@ -1344,9 +1806,9 @@ handleChangeReporte(e){
 
     }
 
-    handleSubmit = () => {
+    handleSubmit = async () => {
 
-        let { carrito, formula, TipoDocumento } = this.state
+        let { carrito, formula, TipoDocumento, productos } = this.state
         // event.preventDefault();
         const carritotemporal = carrito.map(item => ({...item})) 
         const detalle = []
@@ -1386,6 +1848,13 @@ handleChangeReporte(e){
 
         } else {
             carritotemporal.map(p => {
+
+                const detalleproducto = productos.findIndex(pro => pro.nombre === p.nombre)
+                if(detalleproducto > -1){
+                    p.codigo = productos[detalleproducto].codigo
+                    p.estado = 1
+                    p.exento = ""
+                }
                 detalle.push(p)
             })
         }
@@ -1426,7 +1895,7 @@ handleChangeReporte(e){
         ];
 
         let token = this.state.token.token;
-        
+        console.log(JSON.stringify( enviarBoleta ))
         
         return fetch('http://api.softnet.cl/boleta', {
             method: 'POST',
@@ -1437,7 +1906,7 @@ handleChangeReporte(e){
             body: JSON.stringify( enviarBoleta )
         })
             .then(pros => pros.json())
-            .then(pros => {
+            .then(async pros => {
 
                 console.log(pros)
                 
@@ -1449,6 +1918,8 @@ handleChangeReporte(e){
                     return toast.error("Error al procesar la boleta", this.state.toaststyle )
                 }
                 this.setState({ folio: pros[0].folio })
+
+                const guardarpedidomongo = await this.guardarMongo(enviarBoleta, pros[0]) 
                 ///// REINICIAR CARRITO ///////
                 /*
                 if(pros[0].timbre){
@@ -1464,6 +1935,7 @@ handleChangeReporte(e){
                 localStorage.setItem('carrito', JSON.stringify([]));
             })
             .catch(error => {
+                console.log(error)
                 toast.warn('Documento guardado en la cola', this.state.toaststyle)
                 this.inputElement.click();
                 ///// GUARDAR BOLETA EN LA COLA DEL NAVEGADOR ///////
@@ -1477,6 +1949,32 @@ handleChangeReporte(e){
 
             });
 
+    }
+
+    async guardarMongo(cuerpo, respuesta){
+        const { user } = this.state
+        let boleta = cuerpo[0]
+        boleta.folio = respuesta.folio
+        boleta.respuestaapi = respuesta
+        boleta.fecha_string = this.formatDate(new Date())
+        boleta.propietario = user.rut
+        console.log(boleta)
+        return fetch('https://us-west-2.aws.webhooks.mongodb-realm.com/api/client/v2.0/app/nupy-cfbnr/service/restaurant/incoming_webhook/web_guardarPedido', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(boleta)
+        })
+        .then(res => res.json())
+        .then(res => {
+            console.log(res)
+            return res
+        })
+        .catch(error => {
+            console.log(error)
+            return error
+        })
     }
 
     handleDescuento = event => {
@@ -1590,6 +2088,10 @@ handleChangeReporte(e){
             day = '0' + day;
     
         return [year, month, day].join('-');
+    }
+
+    setVisualizacion(status){
+        return this.setState({ visualizacion: status })
     }
 
     reporteMensual(){
@@ -1728,7 +2230,7 @@ handleChangeReporte(e){
 
         
 
-        const { cargandoboleta, vistapos, TipoDocumento, loadingreporte, anoreporte, mesreporte, reportediario, formula} = this.state
+        const { cargandoboleta, vistapos, TipoDocumento, visualizacion, loadingreporte, anoreporte, mesreporte, reportediario, formula, user, formapago } = this.state
 
         return (
             <div className="fullheight">
@@ -1736,11 +2238,20 @@ handleChangeReporte(e){
                  <div className={`celeste  ${this.showAll()}`}>
                <div className="row fullheight">
                     <div className="col-md-12 col-md-12 barrasuperior fullheight">
-                            <h2 className="titulocarrito nomargin titulocart">NUPY <b className="boletasimple">SISTEMA POS</b></h2>
+                            <h2 className="titulocarrito nomargin titulocart" style={{ display: 'inline' }} >NUPY <b className="boletasimple">SISTEMA POS</b></h2>
                             { /* <button className="configbutton" type="button" data-toggle="collapse" data-target="#configmodule" aria-expanded="false" aria-controls="configmodule">
                             <i className="fas fa-cog"></i>
                             </button> */}
-                            {this.verColaBoton()}                                                    
+                            <button style={{ float: 'right' }} className={visualizacion==='pedidos' ? "btn btn-sm btn-success mr-3" : 'btn btn-sm btn-primary'} onClick={()=>{
+                                this.obtenerPedidos(user.rut, this.formatDate(new Date()))
+                                this.setVisualizacion('pedidos')    
+                            }} >PEDIDOS</button>
+                            <button style={{ float: 'right' }} className={visualizacion==='caja' ? "btn btn-sm btn-success mr-3" : 'btn btn-sm btn-primary'} onClick={()=>{
+                                this.obtenerUltimaCuadratura(user.rut)
+                                this.setVisualizacion('caja')}
+                            } >CAJA</button>
+                            {this.verColaBoton()}    
+
                         </div>
                         {this.verCola()}
                         
@@ -1915,6 +2426,18 @@ handleChangeReporte(e){
                             <div className="form-group">
                                 <label className="form-label">DESCUENTO - Porcentaje</label>
                                 <input placeholder="DESCUENTO" className="form-control botontransparente" onChange={this.handleDescuento} />
+                            </div>
+
+                            <div className="form-group">
+                               
+                <label className="form-label">Tipo de pago</label>
+                <select className="form-control botontransparente" value={formapago} onChange={this.handleTipoPago}>
+                    {this.state.formapago.map(tipo => {
+                        return <option value={tipo.id}>{tipo.nombre}</option>
+                    })}
+                </select>
+
+
                             </div>
 
                                 <div className="rows" style={{ marginBottom: 10 }}>

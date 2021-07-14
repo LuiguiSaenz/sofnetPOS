@@ -19,6 +19,32 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <script>
+
+        var Fn = {
+            // Valida el rut con su cadena completa "XXXXXXXX-X"
+            validaRut : function (rutCompleto) {
+                rutCompleto = rutCompleto.replace("‐","-");
+                if (!/^[0-9]+[-|‐]{1}[0-9kK]{1}$/.test( rutCompleto ))
+                    return false;
+                var tmp 	= rutCompleto.split('-');
+                var digv	= tmp[1]; 
+                var rut 	= tmp[0];
+                if ( digv == 'K' ) digv = 'k' ;
+                
+                return (Fn.dv(rut) == digv );
+            },
+            dv : function(T){
+                var M=0,S=1;
+                for(;T;T=Math.floor(T/10))
+                    S=(S+T%10*(9-M++%6))%11;
+                return S?S-1:'k';
+            }
+        }
+
+        
+        </script>
+
     <style>
     html, body {
     height: 100%;
@@ -36,6 +62,10 @@ margin-bottom: 10px;
 .contadorproductos{
 background: #3b4c59;
 padding: 16px;
+}
+
+.billete {
+    width: 100% !important;
 }
 .detalleproductospos{
     text-align: left;}
@@ -99,7 +129,11 @@ background: #31b931;
 .textgris {
     color: #9b9a9a;
 }
-
+.card {
+    background: white;
+    border-radius: 10px;
+    padding:10px;
+}
 .opcionescustom {
     background: white;
 padding: 2px 20px;
@@ -259,26 +293,29 @@ div.scrollmenu .porseleccionar:hover {
         .nomargin {
             margin:0px;
         }
-        /*
+        
         .cuadrobuscador {
-            margin: 30px;
-            margin-top: 30px;
-            margin-top: -97px;
-            background: white;
-            border-radius: 10px;
+            margin-top: 15px;
         }
-*/
-        .alertaboletas {
 
-font-size: 20px;
+        .alertaboletas {
+            font-size: 16px;
 font-weight: bold;
 background: #fe7701;
 border-radius: 50%;
-padding: 3px 15px;
+padding: 2px 12px;
 float: right;
-margin-top: 20px;
+margin: 0px 10px;
 }
-
+.subtitulo {
+font-size: 18px;
+font-weight: bold;
+}
+.monto {
+margin-bottom: 16px;
+margin-top: 5px;
+font-size: 20px;
+}
 .configbutton {
 background: transparent;
 font-size: 25px;
@@ -516,10 +553,10 @@ border-radius: 5px;
         }
 
         .contenedor-productos {
-            max-height: 110px;
+            max-height: 450px;
             overflow: scroll;
             padding: 0px 15px;
-            border-top: 2px solid silver;
+            margin-top: 10px;
         }
 
         ul {
