@@ -4,30 +4,36 @@
   "private": true,
   "homepage": "http://pos.nupy.cl",
   "dependencies": {
+    "@reduxjs/toolkit": "^1.6.1",
     "bootstrap": "^4.6.0",
+    "craco": "^0.0.3",
     "history": "4.7.2",
     "lodash": "^4.17.21",
     "mathjs-expression-parser": "^1.0.2",
-    "react": "16.1.1",
+    "react": "^17.0.2",
     "react-bootstrap": "^1.6.1",
-    "react-dom": "16.1.1",
-    "react-redux": "5.0.7",
-    "react-router-dom": "4.2.2",
+    "react-dom": "^17.0.2",
+    "react-redux": "^7.2.4",
+    "react-router": "^5.2.0",
+    "react-router-dom": "^5.2.0",
+    "react-scripts": "4.0.3",
     "react-select": "^3.1.1",
     "react-to-print": "^2.5.1",
     "react-toastify": "^4.1",
-    "redux": "4.0.0",
-    "redux-logger": "3.0.6",
-    "redux-thunk": "2.2.0"
+    "redux": "^4.1.1",
+    "redux-logger": "^3.0.6"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test --env=jsdom",
     "eject": "react-scripts eject"
   },
   "devDependencies": {
-    "react-scripts": "latest"
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-import-resolver-custom-alias": "^1.2.0",
+    "eslint-plugin-import": "^2.23.4",
+    "prettier": "^2.3.2"
   },
   "browserslist": {
     "production": [

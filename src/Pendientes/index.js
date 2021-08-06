@@ -1,1 +1,1 @@
-export * from './Pendientes';
+export * from './Pendientes'
