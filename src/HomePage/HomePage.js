@@ -222,6 +222,9 @@ class HomePage extends React.Component {
       tipopago: 'efectivo',
       ultimacuadratura: false,
       nuevacuadratura: false,
+
+      ///draft
+      pedidoExpanded: null,
     }
 
     //this.handleSubmit = this.handleSubmit.bind(this);
@@ -500,6 +503,12 @@ class HomePage extends React.Component {
     return this.setState({ visualizacion: 'nuevasubcategoria' })
   }
 
+  setPedidoExpanded = pedidoId => {
+    return this.setState(prevState => ({
+      pedidoExpanded: prevState.pedidoExpanded === pedidoId ? null : pedidoId,
+    }))
+  }
+
   mostrarPedidos() {
     const { loadingPedidos, pedidos } = this.state
 
@@ -558,9 +567,12 @@ class HomePage extends React.Component {
               })}
             </div>
 
-            <table>
+            {/* <pre>{JSON.stringify(pedidos, null, 2)}</pre> */}
+
+            <table className='table'>
               <thead>
                 <tr>
+                  <th></th>
                   <th>FOLIO</th>
                   <th>PRODUCTOS</th>
                   <th>FECHA</th>
@@ -571,15 +583,56 @@ class HomePage extends React.Component {
               <tbody>
                 {pedidos.map((pedido, ipe) => {
                   return (
-                    <tr key={ipe}>
-                      <th>{pedido.folio}</th>
-                      <th>{pedido.Detalle.length}</th>
-                      <th>{pedido.fecha}</th>
-                      <th>{pedido.Adicional.Uno}</th>
-                      <th>
-                        {Intl.NumberFormat(['ban', 'id']).format(pedido.Encabezado.MontoNeto)}
-                      </th>
-                    </tr>
+                    <React.Fragment key={ipe}>
+                      <tr>
+                        <td>
+                          <button type='button' onClick={() => this.setPedidoExpanded(pedido._id)}>
+                            {this.state.pedidoExpanded === pedido._id ? '-' : '+'}
+                          </button>
+                        </td>
+                        <td>{pedido.folio}</td>
+                        <td>{pedido.Detalle.length}</td>
+                        <td>{pedido.fecha}</td>
+                        <td>{pedido.Adicional.Uno}</td>
+                        <td>
+                          {Intl.NumberFormat(['ban', 'id']).format(pedido.Encabezado.MontoNeto)}
+                        </td>
+                      </tr>
+                      {this.state.pedidoExpanded === pedido._id && (
+                        <tr>
+                          <td colSpan={6}>
+                            <div>
+                              <h1 style={{ fontSize: 14, fontWeight: 'bold' }}>Productos</h1>
+                              <table className='table'>
+                                <thead>
+                                  <tr>
+                                    <th>CODIGO</th>
+                                    <th>NOMBRE</th>
+                                    <th>CANTIDAD</th>
+                                    <th>PRECIO</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {pedido.Detalle.map((detalle, ipe) => {
+                                    return (
+                                      <>
+                                        <tr key={ipe}>
+                                          <td>{detalle.codigo}</td>
+                                          <td>{detalle.nombre}</td>
+                                          <td>{detalle.Cantidad}</td>
+                                          <td>{detalle.precio}</td>
+                                        </tr>
+                                        <tr></tr>
+                                      </>
+                                    )
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   )
                 })}
               </tbody>
