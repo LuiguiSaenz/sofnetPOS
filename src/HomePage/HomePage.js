@@ -2914,96 +2914,98 @@ class HomePage extends React.Component {
               <div className='row fullheight'>
                 <div className='col-md-12 fullheight'>
                   <div className='row fullheight'>
-                    {vistapos === true ? (
-                      <div className='col-md-7 fullheight' style={{ paddingRight: 0 }}>
-                        {this.tipoVisualizacion()}
-                      </div>
-                    ) : (
-                      false
-                    )}
-
                     <div
-                      className={`lateral nopadding fullheight ${
-                        vistapos === true ? 'col-md-5' : 'col-md-12'
-                      } `}
+                      className={`${
+                        visualizacion === 'pedidos' ? 'col-md-12' : 'col-md-7'
+                      } fullheight`}
+                      style={{ paddingRight: 0 }}
                     >
-                      <div className='productosenelcarrito fullheight'>
-                        <div className='contadorproductos'>
-                          <h4 className='contadorcart nomargin'>
-                            {this.state.carrito.length} Productos en el carrito
-                          </h4>
-                        </div>
-                        {this.mostrarCarritoEditar()}
-
-                        <div className='contener2'>
-                          <div className='form-group'>
-                            <label className='form-label'>DESCUENTO - Porcentaje</label>
-                            <input
-                              className='form-control botontransparente'
-                              placeholder='DESCUENTO'
-                              onChange={this.handleDescuento}
-                            />
+                      {this.tipoVisualizacion()}
+                    </div>
+                    {visualizacion !== 'pedidos' && (
+                      <div
+                        className={`lateral nopadding fullheight ${
+                          vistapos === true ? 'col-md-5' : 'col-md-12'
+                        } `}
+                      >
+                        <div className='productosenelcarrito fullheight'>
+                          <div className='contadorproductos'>
+                            <h4 className='contadorcart nomargin'>
+                              {this.state.carrito.length} Productos en el carrito
+                            </h4>
                           </div>
+                          {this.mostrarCarritoEditar()}
 
-                          <div className='form-group'>
-                            <label className='form-label'>Tipo de pago</label>
-                            <select
-                              className='form-control botontransparente'
-                              value={formapago}
-                              onChange={this.handleTipoPago}
-                            >
-                              {this.state.formapago.map(tipo => {
-                                return (
-                                  <option key={tipo.id} value={tipo.id}>
-                                    {tipo.nombre}
-                                  </option>
-                                )
-                              })}
-                            </select>
-                          </div>
-
-                          <div className='rows' style={{ marginBottom: 10 }}>
-                            <div className='col-xs-4'>
-                              <label className='mayuscula singrosor form-label'>Monto</label>
+                          <div className='contener2'>
+                            <div className='form-group'>
+                              <label className='form-label'>DESCUENTO - Porcentaje</label>
                               <input
                                 className='form-control botontransparente'
-                                placeholder='MONTO'
-                                style={{ borderBottom: '3px solid white', borderRadius: 0 }}
-                                type='number'
-                                onChange={this.handleVuelto}
+                                placeholder='DESCUENTO'
+                                onChange={this.handleDescuento}
                               />
                             </div>
 
-                            <div className='col-xs-4'>
-                              <label className='mayuscula singrosor form-label'>Vuelto</label>
-                              <input
+                            <div className='form-group'>
+                              <label className='form-label'>Tipo de pago</label>
+                              <select
                                 className='form-control botontransparente'
-                                placeholder='VUELTO'
-                                readOnly
-                                value={Intl.NumberFormat(['ban', 'id']).format(vuelto)}
-                              />
+                                value={formapago}
+                                onChange={this.handleTipoPago}
+                              >
+                                {this.state.formapago.map(tipo => {
+                                  return (
+                                    <option key={tipo.id} value={tipo.id}>
+                                      {tipo.nombre}
+                                    </option>
+                                  )
+                                })}
+                              </select>
                             </div>
 
-                            <div className='col-xs-4'>
-                              <label className='mayuscula singrosor form-label'>Total</label>
-                              <h2 className='monto'>
-                                {Intl.NumberFormat(['ban', 'id']).format(final)}
-                              </h2>
+                            <div className='rows' style={{ marginBottom: 10 }}>
+                              <div className='col-xs-4'>
+                                <label className='mayuscula singrosor form-label'>Monto</label>
+                                <input
+                                  className='form-control botontransparente'
+                                  placeholder='MONTO'
+                                  style={{ borderBottom: '3px solid white', borderRadius: 0 }}
+                                  type='number'
+                                  onChange={this.handleVuelto}
+                                />
+                              </div>
+
+                              <div className='col-xs-4'>
+                                <label className='mayuscula singrosor form-label'>Vuelto</label>
+                                <input
+                                  className='form-control botontransparente'
+                                  placeholder='VUELTO'
+                                  readOnly
+                                  value={Intl.NumberFormat(['ban', 'id']).format(vuelto)}
+                                />
+                              </div>
+
+                              <div className='col-xs-4'>
+                                <label className='mayuscula singrosor form-label'>Total</label>
+                                <h2 className='monto'>
+                                  {Intl.NumberFormat(['ban', 'id']).format(final)}
+                                </h2>
+                              </div>
                             </div>
+                            {cargandoboleta ? (
+                              <h4 className='loading'>Cargando</h4>
+                            ) : (
+                              <button
+                                className='pagar btn btn-sucess'
+                                onClick={() => this.handleSubmit()}
+                              >
+                                FINALIZAR Y PAGAR{' '}
+                              </button>
+                            )}
                           </div>
-                          {cargandoboleta ? (
-                            <h4 className='loading'>Cargando</h4>
-                          ) : (
-                            <button
-                              className='pagar btn btn-sucess'
-                              onClick={() => this.handleSubmit()}
-                            >
-                              FINALIZAR Y PAGAR{' '}
-                            </button>
-                          )}
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
