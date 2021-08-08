@@ -11,12 +11,6 @@ import _escapeRegExp from 'lodash/escapeRegExp'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
-// const formatter = new Intl.NumberFormat('en-US', {
-//   style: 'currency',
-//   currency: 'USD',
-//   minimumFractionDigits: 0,
-// })
-
 class ComponentToPrint extends React.Component {
   showhide() {
     if (this.props.show) {
@@ -613,10 +607,10 @@ class HomePage extends React.Component {
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {pedido.Detalle.map((detalle, ipe) => {
+                                  {pedido.Detalle.map((detalle, ide) => {
                                     return (
                                       <>
-                                        <tr key={ipe}>
+                                        <tr key={ide}>
                                           <td>{detalle.codigo}</td>
                                           <td>{detalle.nombre}</td>
                                           <td>{detalle.Cantidad}</td>
@@ -1740,15 +1734,6 @@ class HomePage extends React.Component {
     )
   }
 
-  checkFormula = () => {
-    const subbedFormula = this.subFields(this.state.formula.toString())
-    const result = this.getResult(subbedFormula)
-    this.setState({
-      subbedFormula: subbedFormula,
-      formula: result,
-    })
-  }
-
   handleChangeReporte(e) {
     const { name, value } = e.target
     if (name === 'mesreporte') {
@@ -2283,62 +2268,20 @@ class HomePage extends React.Component {
   }
 
   handleSubmit = async () => {
-    let { carrito, formula, TipoDocumento, productos } = this.state
+    let { carrito, /*formula, TipoDocumento,*/ productos } = this.state
     // event.preventDefault();
     const carritotemporal = carrito.map(item => ({ ...item }))
     const detalle = []
 
-    if (TipoDocumento === 'Boleta Simple') {
-      this.checkFormula()
-      let error = 0
-      console.log(formula)
-      if (!formula) {
-        return alert('Escribe un número')
+    carritotemporal.map(p => {
+      const detalleproducto = productos.findIndex(pro => pro.nombre === p.nombre)
+      if (detalleproducto > -1) {
+        p.codigo = productos[detalleproducto].codigo
+        p.estado = 1
+        p.exento = ''
       }
-      if (formula.toString().indexOf('+') > -1) {
-        error++
-      }
-      if (formula.toString().indexOf('-') > -1) {
-        error++
-      }
-      if (formula.toString().indexOf('*') > -1) {
-        error++
-      }
-      if (formula.toString().indexOf('/') > -1) {
-        error++
-      }
-
-      if (error > 0) {
-        return alert('Obtén el total de la operación antes de procesar la boleta')
-      }
-      console.log(formula)
-      detalle.push({
-        codigo: 1,
-        estado: 1,
-        exento: '',
-        nombre: 'GENERICO',
-        precio: parseFloat(formula),
-        Precio: parseFloat(formula),
-      })
-      carrito.push({
-        codigo: 1,
-        estado: 1,
-        exento: '',
-        nombre: 'GENERICO',
-        precio: parseFloat(formula),
-        Precio: parseFloat(formula),
-      })
-    } else {
-      carritotemporal.map(p => {
-        const detalleproducto = productos.findIndex(pro => pro.nombre === p.nombre)
-        if (detalleproducto > -1) {
-          p.codigo = productos[detalleproducto].codigo
-          p.estado = 1
-          p.exento = ''
-        }
-        detalle.push(p)
-      })
-    }
+      detalle.push(p)
+    })
 
     this.setState({ cargandoboleta: true })
 
@@ -2555,32 +2498,6 @@ class HomePage extends React.Component {
     return this.setState({ formula: formula + num })
   }
 
-  botonesTipoPago() {
-    if (this.state.TipoDocumento === '') {
-      return (
-        <div>
-          <a
-            className='tipodocumento btn btn-primary'
-            href='javascript:void(0)'
-            onClick={() => this.setTipoDocumento('Boleta Simple')}
-          >
-            BOLETA SIMPLE
-          </a>
-
-          <a
-            className='tipodocumento btn btn-primary'
-            href='javascript:void(0)'
-            onClick={() => this.setTipoDocumento('BOLETA CON DETALLE')}
-          >
-            BOLETA CON DETALLE
-          </a>
-        </div>
-      )
-    }
-
-    return ''
-  }
-
   convertMonth(month) {
     const mes = month.toString()
     if (mes.length < 2) return `0${mes}`
@@ -2730,13 +2647,6 @@ class HomePage extends React.Component {
 
   render() {
     ////////// VALORES ///////////
-    // const { filtelowercasedFilterr, productos } = this.state
-    // const lowercasedFilter = filter.toLowerCase()
-    // const productosFiltrados = productos.filter(item => {
-    //   return Object.keys(item).some(key =>
-    //     item[key].toString().toLowerCase().includes(lowercasedFilter)
-    //   )
-    // })
 
     let totalidad = this.state.carrito.reduce((prev, cur) => prev + parseInt(cur.precio), 0)
     let final = totalidad - (totalidad * parseInt(this.state.descuento)) / 100
@@ -2763,7 +2673,6 @@ class HomePage extends React.Component {
             >
               NUPY
             </h1>
-            {this.botonesTipoPago()}
           </div>
         )
       }
@@ -2773,13 +2682,11 @@ class HomePage extends React.Component {
     const {
       cargandoboleta,
       vistapos,
-      TipoDocumento,
       visualizacion,
       loadingreporte,
       anoreporte,
       mesreporte,
       reportediario,
-      formula,
       user,
       formapago,
     } = this.state
@@ -3005,238 +2912,100 @@ class HomePage extends React.Component {
                 </div>
               </div>
               <div className='row fullheight'>
-                {TipoDocumento === 'Boleta Simple' ? (
-                  <div className='col-md-12 fullheight'>
-                    <div className='calc'>
-                      <h1 className='amount'>{formula}</h1>
-                      <div className='calc-display-hr'></div>
-                      <div className='calc-btn' id='btn'>
-                        <button
-                          className='calc-btn-primary'
-                          id='seven'
-                          onClick={() => this.escribir('7')}
-                        >
-                          7
-                        </button>
-                        <button
-                          className='calc-btn-primary'
-                          id='eight'
-                          onClick={() => this.escribir('8')}
-                        >
-                          8
-                        </button>
-                        <button
-                          className='calc-btn-primary'
-                          id='nine'
-                          onClick={() => this.escribir('9')}
-                        >
-                          9
-                        </button>
-                        <button
-                          className='calc-btn-primary btn-bg'
-                          id='divide'
-                          onClick={() => this.escribir('/')}
-                        >
-                          /
-                        </button>
-                        <button
-                          className='calc-btn-primary'
-                          id='four'
-                          onClick={() => this.escribir('4')}
-                        >
-                          4
-                        </button>
-                        <button
-                          className='calc-btn-primary'
-                          id='five'
-                          onClick={() => this.escribir('5')}
-                        >
-                          5
-                        </button>
-
-                        <button
-                          className='calc-btn-primary'
-                          id='six'
-                          onClick={() => this.escribir('6')}
-                        >
-                          6
-                        </button>
-                        <button
-                          className='calc-btn-primary btn-bg'
-                          id='multiply'
-                          onClick={() => this.escribir('*')}
-                        >
-                          *
-                        </button>
-                        <button
-                          className='calc-btn-primary'
-                          id='one'
-                          onClick={() => this.escribir('1')}
-                        >
-                          1
-                        </button>
-                        <button
-                          className='calc-btn-primary'
-                          id='two'
-                          onClick={() => this.escribir('2')}
-                        >
-                          2
-                        </button>
-                        <button
-                          className='calc-btn-primary'
-                          id='three'
-                          onClick={() => this.escribir('3')}
-                        >
-                          3
-                        </button>
-                        <button
-                          className='calc-btn-primary btn-bg'
-                          id='add'
-                          onClick={() => this.escribir('+')}
-                        >
-                          +
-                        </button>
-                        <button
-                          className='calc-btn-primary btn-bg'
-                          id='decimal'
-                          onClick={() => this.escribir('.')}
-                        >
-                          .
-                        </button>
-                        <button
-                          className='calc-btn-primary'
-                          id='zero'
-                          onClick={() => this.escribir('0')}
-                        >
-                          0
-                        </button>
-
-                        <button
-                          className='calc-btn-primary btn-bg-equal'
-                          id='equals'
-                          onClick={() => this.checkFormula()}
-                        >
-                          =
-                        </button>
-                        <button
-                          className='calc-btn-primary btn-bg'
-                          id='subtract'
-                          onClick={() => this.escribir('-')}
-                        >
-                          -
-                        </button>
-                        <button
-                          className='calc-btn-clear'
-                          onClick={() => this.setState({ formula: '' })}
-                        >
-                          BORRAR
-                        </button>
-                        {cargandoboleta ? (
-                          <h4 className='loading2'>CARGANDO</h4>
-                        ) : (
-                          <button className='calc-btn-clear2' onClick={() => this.handleSubmit()}>
-                            EMITIR
-                          </button>
-                        )}
+                <div className='col-md-12 fullheight'>
+                  <div className='row fullheight'>
+                    {vistapos === true ? (
+                      <div className='col-md-7 fullheight' style={{ paddingRight: 0 }}>
+                        {this.tipoVisualizacion()}
                       </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className='col-md-12 fullheight'>
-                    <div className='row fullheight'>
-                      {vistapos === true ? (
-                        <div className='col-md-7 fullheight' style={{ paddingRight: 0 }}>
-                          {this.tipoVisualizacion()}
+                    ) : (
+                      false
+                    )}
+
+                    <div
+                      className={`lateral nopadding fullheight ${
+                        vistapos === true ? 'col-md-5' : 'col-md-12'
+                      } `}
+                    >
+                      <div className='productosenelcarrito fullheight'>
+                        <div className='contadorproductos'>
+                          <h4 className='contadorcart nomargin'>
+                            {this.state.carrito.length} Productos en el carrito
+                          </h4>
                         </div>
-                      ) : (
-                        false
-                      )}
+                        {this.mostrarCarritoEditar()}
 
-                      <div
-                        className={`lateral nopadding fullheight ${
-                          vistapos === true ? 'col-md-5' : 'col-md-12'
-                        } `}
-                      >
-                        <div className='productosenelcarrito fullheight'>
-                          <div className='contadorproductos'>
-                            <h4 className='contadorcart nomargin'>
-                              {this.state.carrito.length} Productos en el carrito
-                            </h4>
+                        <div className='contener2'>
+                          <div className='form-group'>
+                            <label className='form-label'>DESCUENTO - Porcentaje</label>
+                            <input
+                              className='form-control botontransparente'
+                              placeholder='DESCUENTO'
+                              onChange={this.handleDescuento}
+                            />
                           </div>
-                          {this.mostrarCarritoEditar()}
 
-                          <div className='contener2'>
-                            <div className='form-group'>
-                              <label className='form-label'>DESCUENTO - Porcentaje</label>
+                          <div className='form-group'>
+                            <label className='form-label'>Tipo de pago</label>
+                            <select
+                              className='form-control botontransparente'
+                              value={formapago}
+                              onChange={this.handleTipoPago}
+                            >
+                              {this.state.formapago.map(tipo => {
+                                return (
+                                  <option key={tipo.id} value={tipo.id}>
+                                    {tipo.nombre}
+                                  </option>
+                                )
+                              })}
+                            </select>
+                          </div>
+
+                          <div className='rows' style={{ marginBottom: 10 }}>
+                            <div className='col-xs-4'>
+                              <label className='mayuscula singrosor form-label'>Monto</label>
                               <input
                                 className='form-control botontransparente'
-                                placeholder='DESCUENTO'
-                                onChange={this.handleDescuento}
+                                placeholder='MONTO'
+                                style={{ borderBottom: '3px solid white', borderRadius: 0 }}
+                                type='number'
+                                onChange={this.handleVuelto}
                               />
                             </div>
 
-                            <div className='form-group'>
-                              <label className='form-label'>Tipo de pago</label>
-                              <select
+                            <div className='col-xs-4'>
+                              <label className='mayuscula singrosor form-label'>Vuelto</label>
+                              <input
                                 className='form-control botontransparente'
-                                value={formapago}
-                                onChange={this.handleTipoPago}
-                              >
-                                {this.state.formapago.map(tipo => {
-                                  return (
-                                    <option key={tipo.id} value={tipo.id}>
-                                      {tipo.nombre}
-                                    </option>
-                                  )
-                                })}
-                              </select>
+                                placeholder='VUELTO'
+                                readOnly
+                                value={Intl.NumberFormat(['ban', 'id']).format(vuelto)}
+                              />
                             </div>
 
-                            <div className='rows' style={{ marginBottom: 10 }}>
-                              <div className='col-xs-4'>
-                                <label className='mayuscula singrosor form-label'>Monto</label>
-                                <input
-                                  className='form-control botontransparente'
-                                  placeholder='MONTO'
-                                  style={{ borderBottom: '3px solid white', borderRadius: 0 }}
-                                  type='number'
-                                  onChange={this.handleVuelto}
-                                />
-                              </div>
-
-                              <div className='col-xs-4'>
-                                <label className='mayuscula singrosor form-label'>Vuelto</label>
-                                <input
-                                  className='form-control botontransparente'
-                                  placeholder='VUELTO'
-                                  readOnly
-                                  value={Intl.NumberFormat(['ban', 'id']).format(vuelto)}
-                                />
-                              </div>
-
-                              <div className='col-xs-4'>
-                                <label className='mayuscula singrosor form-label'>Total</label>
-                                <h2 className='monto'>
-                                  {Intl.NumberFormat(['ban', 'id']).format(final)}
-                                </h2>
-                              </div>
+                            <div className='col-xs-4'>
+                              <label className='mayuscula singrosor form-label'>Total</label>
+                              <h2 className='monto'>
+                                {Intl.NumberFormat(['ban', 'id']).format(final)}
+                              </h2>
                             </div>
-                            {cargandoboleta ? (
-                              <h4 className='loading'>Cargando</h4>
-                            ) : (
-                              <button
-                                className='pagar btn btn-sucess'
-                                onClick={() => this.handleSubmit()}
-                              >
-                                FINALIZAR Y PAGAR{' '}
-                              </button>
-                            )}
                           </div>
+                          {cargandoboleta ? (
+                            <h4 className='loading'>Cargando</h4>
+                          ) : (
+                            <button
+                              className='pagar btn btn-sucess'
+                              onClick={() => this.handleSubmit()}
+                            >
+                              FINALIZAR Y PAGAR{' '}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>
