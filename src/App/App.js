@@ -4,6 +4,7 @@ import { Route, BrowserRouter as Router } from 'react-router-dom'
 import { PrivateRoute } from '../_components'
 import { HomePage } from '../HomePage'
 import { LoginPage } from '../LoginPage'
+import './../styles/app.scss'
 
 class App extends React.Component {
   render() {

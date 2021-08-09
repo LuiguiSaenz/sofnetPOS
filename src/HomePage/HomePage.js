@@ -3,13 +3,14 @@
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable react/jsx-handler-names */
 import React from 'react'
-import { Link } from 'react-router-dom'
 import ReactToPrint from 'react-to-print'
 import math from 'mathjs-expression-parser'
 import _clone from 'lodash/clone'
 import _escapeRegExp from 'lodash/escapeRegExp'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { Button, Dropdown, Table } from 'react-bootstrap'
+import PedidoDetalleModal from './PedidoDetalleModal'
 
 class ComponentToPrint extends React.Component {
   showhide() {
@@ -60,7 +61,11 @@ class ComponentToPrint extends React.Component {
     let tiempo = this.props.tiempo
 
     return (
-      <div className={this.showhide()} id='boletaimprimir' style={{ background: 'white' }}>
+      <div
+        className={this.showhide()}
+        id='boletaimprimir'
+        style={{ background: 'white', marginBottom: 30 }}
+      >
         <div className='encabezadoboleta'>
           <h4>{this.props.datosempresa.razon} </h4>
           <p>{this.props.datosempresa.direccion} </p>
@@ -218,7 +223,7 @@ class HomePage extends React.Component {
       nuevacuadratura: false,
 
       ///draft
-      pedidoExpanded: null,
+      pedido: null,
     }
 
     //this.handleSubmit = this.handleSubmit.bind(this);
@@ -497,12 +502,6 @@ class HomePage extends React.Component {
     return this.setState({ visualizacion: 'nuevasubcategoria' })
   }
 
-  setPedidoExpanded = pedidoId => {
-    return this.setState(prevState => ({
-      pedidoExpanded: prevState.pedidoExpanded === pedidoId ? null : pedidoId,
-    }))
-  }
-
   mostrarPedidos() {
     const { loadingPedidos, pedidos } = this.state
 
@@ -561,76 +560,55 @@ class HomePage extends React.Component {
               })}
             </div>
 
-            {/* <pre>{JSON.stringify(pedidos, null, 2)}</pre> */}
-
-            <table className='table'>
+            <Table bordered hover size='sm' striped>
               <thead>
                 <tr>
-                  <th></th>
                   <th>FOLIO</th>
                   <th>PRODUCTOS</th>
                   <th>FECHA</th>
                   <th>DTE</th>
                   <th>NETO</th>
+                  <th>ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
                 {pedidos.map((pedido, ipe) => {
                   return (
-                    <React.Fragment key={ipe}>
-                      <tr>
-                        <td>
-                          <button type='button' onClick={() => this.setPedidoExpanded(pedido._id)}>
-                            {this.state.pedidoExpanded === pedido._id ? '-' : '+'}
-                          </button>
-                        </td>
-                        <td>{pedido.folio}</td>
-                        <td>{pedido.Detalle.length}</td>
-                        <td>{pedido.fecha}</td>
-                        <td>{pedido.Adicional.Uno}</td>
-                        <td>
-                          {Intl.NumberFormat(['ban', 'id']).format(pedido.Encabezado.MontoNeto)}
-                        </td>
-                      </tr>
-                      {this.state.pedidoExpanded === pedido._id && (
-                        <tr>
-                          <td colSpan={6}>
-                            <div>
-                              <h1 style={{ fontSize: 14, fontWeight: 'bold' }}>Productos</h1>
-                              <table className='table'>
-                                <thead>
-                                  <tr>
-                                    <th>CODIGO</th>
-                                    <th>NOMBRE</th>
-                                    <th>CANTIDAD</th>
-                                    <th>PRECIO</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {pedido.Detalle.map((detalle, ide) => {
-                                    return (
-                                      <>
-                                        <tr key={ide}>
-                                          <td>{detalle.codigo}</td>
-                                          <td>{detalle.nombre}</td>
-                                          <td>{detalle.Cantidad}</td>
-                                          <td>{detalle.precio}</td>
-                                        </tr>
-                                        <tr></tr>
-                                      </>
-                                    )
-                                  })}
-                                </tbody>
-                              </table>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
+                    <tr key={ipe}>
+                      <td>{pedido.folio}</td>
+                      <td>{pedido.Detalle.length}</td>
+                      <td>{pedido.fecha}</td>
+                      <td>{pedido.Adicional.Uno}</td>
+                      <td>
+                        {Intl.NumberFormat(['ban', 'id']).format(pedido.Encabezado.MontoNeto)}
+                      </td>
+                      <td>
+                        <Dropdown>
+                          <Dropdown.Toggle
+                            className='no-caret'
+                            id='dropdown-basic'
+                            size='sm'
+                            variant='outline-primary'
+                          >
+                            <i class='fas fa-ellipsis-v'></i>
+                          </Dropdown.Toggle>
+
+                          <Dropdown.Menu>
+                            <Dropdown.Item
+                              href='#/action-1'
+                              onClick={() => this.setState({ pedido })}
+                            >
+                              Ver detalle
+                            </Dropdown.Item>
+                            <Dropdown.Item href='#/action-2'>Entregar</Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      </td>
+                    </tr>
                   )
                 })}
               </tbody>
-            </table>
+            </Table>
           </div>
         ) : (
           false
@@ -802,7 +780,6 @@ class HomePage extends React.Component {
               </div>
 
               <div className='col-md-12'>
-                <hr />
                 {loadingCuadratura ? (
                   <div className='loading3 '>
                     <img src='loading.gif' />
@@ -1769,9 +1746,6 @@ class HomePage extends React.Component {
   /*
 
     */
-  setTipoDocumento(valor) {
-    this.setState({ TipoDocumento: valor, carrito: [] })
-  }
 
   handleChangeProducto(e) {
     const { name, value } = e.target
@@ -2663,7 +2637,6 @@ class HomePage extends React.Component {
             <h1
               className='nuppy'
               style={{
-                color: 'white',
                 marginTop: 40,
                 color: 'black',
                 fontWeight: 600,
@@ -2683,10 +2656,10 @@ class HomePage extends React.Component {
       cargandoboleta,
       vistapos,
       visualizacion,
-      loadingreporte,
-      anoreporte,
-      mesreporte,
-      reportediario,
+      // loadingreporte,
+      // anoreporte,
+      // mesreporte,
+      // reportediario,
       user,
       formapago,
     } = this.state
@@ -2700,37 +2673,28 @@ class HomePage extends React.Component {
               <h2 className='titulocarrito nomargin titulocart' style={{ display: 'inline' }}>
                 NUPY <b className='boletasimple'>SISTEMA POS</b>
               </h2>
-              {/* <button className="configbutton" type="button" data-toggle="collapse" data-target="#configmodule" aria-expanded="false" aria-controls="configmodule">
-                            <i className="fas fa-cog"></i>
-                            </button> */}
-              <button
-                className={
-                  visualizacion === 'pedidos'
-                    ? 'btn btn-sm btn-success mr-3'
-                    : 'btn btn-sm btn-primary'
-                }
-                style={{ float: 'right' }}
-                onClick={() => {
-                  this.obtenerPedidos(user.rut, this.formatDate(new Date()))
-                  this.setVisualizacion('pedidos')
-                }}
-              >
-                PEDIDOS
-              </button>
-              <button
-                className={
-                  visualizacion === 'caja'
-                    ? 'btn btn-sm btn-success mr-3'
-                    : 'btn btn-sm btn-primary'
-                }
-                style={{ float: 'right' }}
-                onClick={() => {
-                  this.obtenerUltimaCuadratura(user.rut)
-                  this.setVisualizacion('caja')
-                }}
-              >
-                CAJA
-              </button>
+              <div style={{ float: 'right' }}>
+                <Button
+                  size='sm'
+                  variant={visualizacion === 'caja' ? 'success' : 'primary'}
+                  onClick={() => {
+                    this.obtenerUltimaCuadratura(user.rut)
+                    this.setVisualizacion('caja')
+                  }}
+                >
+                  CAJA
+                </Button>
+                <Button
+                  size='sm'
+                  variant={visualizacion === 'pedidos' ? 'success' : 'primary'}
+                  onClick={() => {
+                    this.obtenerPedidos(user.rut, this.formatDate(new Date()))
+                    this.setVisualizacion('pedidos')
+                  }}
+                >
+                  PEDIDOS
+                </Button>
+              </div>
               {this.verColaBoton()}
             </div>
             {this.verCola()}
@@ -2739,186 +2703,15 @@ class HomePage extends React.Component {
         <div className='azuloscuro fullheight'>
           <Renderizar />
           <div className={`fullheight ${this.showAll()}`}>
-            <div className='row nomargin fullheight'>
-              <div className='collapse ' id='configmodule'>
-                <div className='contener'>
-                  <div className='col-md-12 col-md-12'>
-                    <h2>Configuración</h2>
-                    {loadingreporte ? (
-                      <h2 className='text-white' style={{ fontSize: 18 }}>
-                        Cargando
-                      </h2>
-                    ) : (
-                      <div className='row'>
-                        <div className='col-md-6'>
-                          <button
-                            className='btn btn-sm btn-primary'
-                            style={{ width: '100%' }}
-                            onClick={() => this.reporteDiario()}
-                          >
-                            REPORTE DEL DÍA
-                          </button>
-                        </div>
-                        <div className='col-md-6'>
-                          <button
-                            className='btn btn-sm btn-primary'
-                            style={{ width: '100%' }}
-                            onClick={() => this.reporteMensual()}
-                          >
-                            REPORTE DEL MES
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {reportediario.fecha ? (
-                      <div style={{ padding: 20, textAlign: 'center', border: '1px solid white' }}>
-                        {reportediario.titulo === 'Reporte del mes' ? (
-                          <div>
-                            <label className='form-control-label'>Año</label>
-                            <input
-                              className='form-control'
-                              name='anoreporte'
-                              type='number'
-                              value={anoreporte}
-                              onChange={this.handleChangeReporte}
-                            />
-
-                            <label className='form-control-label'>Mes</label>
-                            <select
-                              className='form-control'
-                              defaultValue={mesreporte}
-                              name='mesreporte'
-                              onChange={this.handleChangeReporte}
-                            >
-                              <option value='01'>Enero</option>
-                              <option value='02'>Febrero</option>
-                              <option value='03'>Marzo</option>
-                              <option value='04'>Abril</option>
-                              <option value='05'>Mayo</option>
-                              <option value='06'>Junio</option>
-                              <option value='07'>Julio</option>
-                              <option value='08'>Agosto</option>
-                              <option value='09'>Septiembre</option>
-                              <option value='10'>Octubre</option>
-                              <option value='11'>Noviembre</option>
-                              <option value='12'>Diciembre</option>
-                            </select>
-                            <button
-                              className='btn btn-sm btn-primary'
-                              style={{ width: '100%' }}
-                              onClick={() => this.reporteMensual()}
-                            >
-                              ACTUALIZAR
-                            </button>
-                          </div>
-                        ) : (
-                          false
-                        )}
-                        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 'bold' }}>
-                          {reportediario.titulo}
-                        </h1>
-                        <h3 style={{ margin: 0 }}>DTE Emitidos: {reportediario.totaldocumentos}</h3>
-                        <h3 style={{ margin: 0 }}>
-                          Total NETO: $
-                          {Intl.NumberFormat(['ban', 'id']).format(
-                            reportediario.totalneto ? reportediario.totalneto : 0
-                          )}
-                        </h3>
-                        <h3 style={{ margin: 0 }}>
-                          Total IVA: $
-                          {Intl.NumberFormat(['ban', 'id']).format(
-                            reportediario.totaliva ? reportediario.totaliva : 0
-                          )}
-                        </h3>
-                        <h3 style={{ margin: 0 }}>
-                          Total BRUTO: $
-                          {Intl.NumberFormat(['ban', 'id']).format(
-                            reportediario.totalmonto ? reportediario.totalmonto : 0
-                          )}
-                        </h3>
-                      </div>
-                    ) : (
-                      false
-                    )}
-                  </div>
-
-                  <div className='col-md-12 col-md-12'>
-                    <div className='form-group'>
-                      <label className='form-label'>TIPO DE PAGO</label>
-                      <select className='form-control' onChange={this.handleTipoPago}>
-                        {this.state.formapago.map(tipo => {
-                          return (
-                            <option key={tipo.id} value={tipo.id}>
-                              {tipo.nombre}
-                            </option>
-                          )
-                        })}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className='col-md-12 col-md-12'>
-                    <div className='form-group'>
-                      <label className='form-label'>BODEGA</label>
-                      <select className='form-control' onChange={this.handleBodega}>
-                        {this.state.bodega.map(tipo => {
-                          return (
-                            <option key={tipo.id} value={tipo.id}>
-                              {tipo.nombre}
-                            </option>
-                          )
-                        })}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className='col-md-12 col-md-12'>
-                    <div className='form-group'>
-                      <label className='form-label'>VENDEDOR</label>
-                      <select className='form-control' onChange={this.handleVendedor}>
-                        {this.state.vendedores.map(tipo => {
-                          return (
-                            <option key={tipo.id} value={tipo.rut_vendedor}>
-                              {tipo.nombre}
-                            </option>
-                          )
-                        })}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className='col-md-12 col-md-12'>
-                    <div className='form-group'>
-                      <label className='form-label'>Area Negocio</label>
-                      <select className='form-control' onChange={this.handleAreaNegocio}>
-                        {this.state.areaNegocio.map(tipo => {
-                          return (
-                            <option key={tipo.id} value={tipo.id}>
-                              {tipo.nombre}
-                            </option>
-                          )
-                        })}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className='col-md-12 col-md-12' style={{ marginBottom: 10 }}></div>
-
-                  <div className='col-md-12 col-md-12'>
-                    <Link className='btn btn-naranja' to='/login'>
-                      SALIR DE MI CUENTA
-                    </Link>
-                  </div>
-                </div>
-              </div>
-              <div className='row fullheight'>
-                <div className='col-md-12 fullheight'>
+            <div className='row nomargin fullheight' style={{ '--bs-gutter-x': 0 }}>
+              <div className='row fullheight' style={{ padding: 0 }}>
+                <div className='col-md-12 fullheight' style={{ paddingRight: 0 }}>
                   <div className='row fullheight'>
                     <div
                       className={`${
                         visualizacion === 'pedidos' ? 'col-md-12' : 'col-md-7'
                       } fullheight`}
-                      style={{ paddingRight: 0 }}
+                      style={{ paddingRight: 0, paddingLeft: 0 }}
                     >
                       {this.tipoVisualizacion()}
                     </div>
@@ -2937,17 +2730,20 @@ class HomePage extends React.Component {
                           {this.mostrarCarritoEditar()}
 
                           <div className='contener2'>
-                            <div className='form-group'>
-                              <label className='form-label'>DESCUENTO - Porcentaje</label>
+                            <div className='form-group mb-3'>
+                              <label className='form-label' style={{ fontWeight: 'bold' }}>
+                                DESCUENTO - Porcentaje
+                              </label>
                               <input
                                 className='form-control botontransparente'
                                 placeholder='DESCUENTO'
                                 onChange={this.handleDescuento}
                               />
                             </div>
-
-                            <div className='form-group'>
-                              <label className='form-label'>Tipo de pago</label>
+                            <div className='form-group mb-3'>
+                              <label className='form-label' style={{ fontWeight: 'bold' }}>
+                                Tipo de pago
+                              </label>
                               <select
                                 className='form-control botontransparente'
                                 value={formapago}
@@ -2962,9 +2758,8 @@ class HomePage extends React.Component {
                                 })}
                               </select>
                             </div>
-
                             <div className='rows' style={{ marginBottom: 10 }}>
-                              <div className='col-xs-4'>
+                              <div className='col-xs-4' style={{ padding: '0 15px' }}>
                                 <label className='mayuscula singrosor form-label'>Monto</label>
                                 <input
                                   className='form-control botontransparente'
@@ -2975,7 +2770,7 @@ class HomePage extends React.Component {
                                 />
                               </div>
 
-                              <div className='col-xs-4'>
+                              <div className='col-xs-4' style={{ padding: '0 15px' }}>
                                 <label className='mayuscula singrosor form-label'>Vuelto</label>
                                 <input
                                   className='form-control botontransparente'
@@ -2985,7 +2780,7 @@ class HomePage extends React.Component {
                                 />
                               </div>
 
-                              <div className='col-xs-4'>
+                              <div className='col-xs-4' style={{ padding: '0 15px' }}>
                                 <label className='mayuscula singrosor form-label'>Total</label>
                                 <h2 className='monto'>
                                   {Intl.NumberFormat(['ban', 'id']).format(final)}
@@ -2995,12 +2790,14 @@ class HomePage extends React.Component {
                             {cargandoboleta ? (
                               <h4 className='loading'>Cargando</h4>
                             ) : (
-                              <button
-                                className='pagar btn btn-sucess'
-                                onClick={() => this.handleSubmit()}
+                              <Button
+                                className='pagar'
+                                style={{ width: '100%' }}
+                                variant='success'
+                                onClick={this.handleSubmit}
                               >
                                 FINALIZAR Y PAGAR{' '}
-                              </button>
+                              </Button>
                             )}
                           </div>
                         </div>
@@ -3035,6 +2832,11 @@ class HomePage extends React.Component {
           timbre={this.state.timbre}
           tipodocumento={this.state.TipoDocumento}
           tipopago={this.state.inputPago}
+        />
+        <PedidoDetalleModal
+          open={Boolean(this.state.pedido)}
+          pedido={this.state.pedido}
+          onClose={() => this.setState({ pedido: null })}
         />
       </div>
     )
