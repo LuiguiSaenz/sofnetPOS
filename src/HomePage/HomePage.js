@@ -9,8 +9,8 @@ import _clone from 'lodash/clone'
 import _escapeRegExp from 'lodash/escapeRegExp'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import { Button, Dropdown, Table } from 'react-bootstrap'
-import PedidoDetalleModal from './PedidoDetalleModal'
+import { Button } from 'react-bootstrap'
+import { SeccionPedidos } from './components/seccion-pedidos'
 
 class ComponentToPrint extends React.Component {
   showhide() {
@@ -160,7 +160,6 @@ class HomePage extends React.Component {
       efectivo: 0,
       formula: '',
       subbedFormula: '',
-      tipopago: 'Cargando',
       datosempresa: '',
       folio: '',
       curtime: new Date().toLocaleString(),
@@ -240,14 +239,11 @@ class HomePage extends React.Component {
 
   handleChangeState(e) {
     const { name, value } = e.target
-    const { user } = this.state
     if (name === 'tipoproducto') {
       if (value === 'simple' || value === 'agrupado') {
         this.setState({ arrayitems: [] })
       }
-    } else if (name === 'fechavisualizacion') {
-      this.obtenerPedidos(user.rut, this.formatDate(new Date(value)))
-    }
+    } 
     this.setState({ [name]: value })
   }
 
@@ -447,27 +443,6 @@ class HomePage extends React.Component {
     }
   }
 
-  obtenerPedidos(propietario, fecha) {
-    this.setState({ loadingPedidos: true })
-    return fetch(
-      `https://us-west-2.aws.webhooks.mongodb-realm.com/api/client/v2.0/app/nupy-cfbnr/service/restaurant/incoming_webhook/web_PedidosByPropietario?propietario=${propietario}&fecha=${fecha}`
-    )
-      .then(res => res.text())
-      .then(res => {
-        const orders = JSON.parse(res)
-        if (orders === '[]') {
-          return this.setState({ pedidos: [], loadingPedidos: false })
-        }
-
-        const jsonpedidos = JSON.parse(orders)
-        return this.setState({ pedidos: jsonpedidos, loadingPedidos: false })
-      })
-      .catch(error => {
-        this.setState({ loadingPedidos: false })
-        toast.error('Ocurrió un problema al realizar esta operación', this.state.toaststyle)
-      })
-  }
-
   eliminarElemento(id, tipo) {
     const { user } = this.state
     this.setState({ loadingCategorias: true })
@@ -502,121 +477,6 @@ class HomePage extends React.Component {
     return this.setState({ visualizacion: 'nuevasubcategoria' })
   }
 
-  mostrarPedidos() {
-    const { loadingPedidos, pedidos } = this.state
-
-    if (loadingPedidos)
-      return (
-        <div className='loading3'>
-          <img src='loading.gif' />
-          <h3>Cargando...</h3>
-        </div>
-      )
-
-    if (pedidos.length < 1) return <h1>Sin pedidos encontrados</h1>
-
-    let mediospago = {}
-    pedidos.map(pedido => {
-      if (!mediospago[pedido.Adicional.Uno]) {
-        const nombreMenu = mediospago[pedido.Adicional.Uno]
-        mediospago[pedido.Adicional.Uno] = { nombre: nombreMenu }
-        mediospago[pedido.Adicional.Uno].pedidos = []
-      }
-      mediospago[pedido.Adicional.Uno].pedidos.push(pedido)
-    })
-
-    const tipospago = Object.keys(mediospago)
-
-    return (
-      <div className='contenedor-productos'>
-        <h1 style={{ margin: '20px 0px 0px 0px', fontSize: 23 }}>{pedidos.length} Pedidos</h1>
-        {Array.isArray(pedidos) ? (
-          <div>
-            <div className='row'>
-              <div className='col-md-12'>
-                <h1>Formas de pago</h1>
-              </div>
-              {tipospago.map((tipopa, ip) => {
-                let totalneto = 0
-                if (mediospago[tipopa].pedidos) {
-                  if (Array.isArray(mediospago[tipopa].pedidos)) {
-                    if (mediospago[tipopa].pedidos.length > 0) {
-                      mediospago[tipopa].pedidos.map(orden => {
-                        if (isNaN(orden.Encabezado.MontoNeto) !== true)
-                          totalneto = totalneto + orden.Encabezado.MontoNeto
-                      })
-                    }
-                  }
-                }
-
-                return (
-                  <div key={`tipopago-${ip}`} className='col-md-3'>
-                    <h3 className='nomargin subtitulo'>{tipopa}</h3>
-                    <h1 className='nomargin'>{mediospago[tipopa].pedidos.length} Pedidos</h1>
-                    <h1 className='nomargin'>Total neto:</h1>
-                    <h1 className='monto'>${Intl.NumberFormat(['ban', 'id']).format(totalneto)}</h1>
-                  </div>
-                )
-              })}
-            </div>
-
-            <Table bordered hover size='sm' striped>
-              <thead>
-                <tr>
-                  <th>FOLIO</th>
-                  <th>PRODUCTOS</th>
-                  <th>FECHA</th>
-                  <th>DTE</th>
-                  <th>NETO</th>
-                  <th>ACCIONES</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pedidos.map((pedido, ipe) => {
-                  return (
-                    <tr key={ipe}>
-                      <td>{pedido.folio}</td>
-                      <td>{pedido.Detalle.length}</td>
-                      <td>{pedido.fecha}</td>
-                      <td>{pedido.Adicional.Uno}</td>
-                      <td>
-                        {Intl.NumberFormat(['ban', 'id']).format(pedido.Encabezado.MontoNeto)}
-                      </td>
-                      <td>
-                        <Dropdown>
-                          <Dropdown.Toggle
-                            className='no-caret'
-                            id='dropdown-basic'
-                            size='sm'
-                            variant='outline-primary'
-                          >
-                            <i class='fas fa-ellipsis-v'></i>
-                          </Dropdown.Toggle>
-
-                          <Dropdown.Menu>
-                            <Dropdown.Item
-                              href='#/action-1'
-                              onClick={() => this.setState({ pedido })}
-                            >
-                              Ver detalle
-                            </Dropdown.Item>
-                            <Dropdown.Item href='#/action-2'>Entregar</Dropdown.Item>
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </Table>
-          </div>
-        ) : (
-          false
-        )}
-      </div>
-    )
-  }
-
   tipoVisualizacion() {
     const { visualizacion, visualizarlistadoproductos, loadingCategorias } = this.state
 
@@ -633,7 +493,7 @@ class HomePage extends React.Component {
     if (visualizacion === 'nuevacategoria') return this.formularioNuevaCategoria()
     if (visualizacion === 'nuevasubcategoria') return this.formularioNuevaSubCategoria()
     if (visualizacion === 'nuevoproducto') return this.formularioNuevoProducto()
-    if (visualizacion === 'pedidos') return this.vistaPedidos()
+    // if (visualizacion === 'pedidos') return this.vistaPedidos()
     if (visualizacion === 'caja') return this.vistaCaja()
   }
 
@@ -952,28 +812,6 @@ class HomePage extends React.Component {
         this.setState({ loadingCuadratura: false })
         toast.error('Ocurrió un problema al realizar esta operación', this.state.toaststyle)
       })
-  }
-
-  vistaPedidos() {
-    return (
-      <div className='contener mt-4'>
-        <span onClick={() => this.setState({ visualizacion: 'default' })}>
-          <i className='fas fa-arrow-left'></i> Atrás
-        </span>
-
-        <div className='cuadrobuscador'>
-          <label className='form-control-label'>Fecha de visualización</label>
-          <input
-            className='form-control'
-            name='fechavisualizacion'
-            type='date'
-            onChange={this.handleChangeState}
-          />
-
-          {this.mostrarPedidos()}
-        </div>
-      </div>
-    )
   }
 
   mostrarBuscadorProductos() {
@@ -2134,7 +1972,7 @@ class HomePage extends React.Component {
     toast.success('Bienvenido', this.state.toaststyle)
     this.getCategorias(user.rut)
     console.log([user.rut, this.formatDate(new Date())])
-    this.obtenerPedidos(user.rut, this.formatDate(new Date()))
+    //this.obtenerPedidos(user.rut, this.formatDate(new Date()))
   }
 
   handleChange = event => {
@@ -2352,6 +2190,7 @@ class HomePage extends React.Component {
     boleta.respuestaapi = respuesta
     boleta.fecha_string = this.formatDate(new Date())
     boleta.propietario = user.rut
+    boleta.estado = 'generado'
     console.log(boleta)
     return fetch(
       'https://us-west-2.aws.webhooks.mongodb-realm.com/api/client/v2.0/app/nupy-cfbnr/service/restaurant/incoming_webhook/web_guardarPedido',
@@ -2668,7 +2507,7 @@ class HomePage extends React.Component {
       <div className='fullheight'>
         <ToastContainer />
         <div className={`celeste  ${this.showAll()}`}>
-          <div className='row fullheight'>
+          <div className='row fullheight m-0'>
             <div className='col-md-12 col-md-12 barrasuperior fullheight'>
               <h2 className='titulocarrito nomargin titulocart' style={{ display: 'inline' }}>
                 NUPY <b className='boletasimple'>SISTEMA POS</b>
@@ -2686,9 +2525,9 @@ class HomePage extends React.Component {
                 </Button>
                 <Button
                   size='sm'
+                  style={{marginLeft: 12}}
                   variant={visualizacion === 'pedidos' ? 'success' : 'primary'}
                   onClick={() => {
-                    this.obtenerPedidos(user.rut, this.formatDate(new Date()))
                     this.setVisualizacion('pedidos')
                   }}
                 >
@@ -2714,6 +2553,11 @@ class HomePage extends React.Component {
                       style={{ paddingRight: 0, paddingLeft: 0 }}
                     >
                       {this.tipoVisualizacion()}
+                      {visualizacion === 'pedidos' && (
+                        <SeccionPedidos
+                          onChangeVisualization={value => this.setVisualizacion(value)}
+                        />
+                      )}
                     </div>
                     {visualizacion !== 'pedidos' && (
                       <div
@@ -2832,11 +2676,6 @@ class HomePage extends React.Component {
           timbre={this.state.timbre}
           tipodocumento={this.state.TipoDocumento}
           tipopago={this.state.inputPago}
-        />
-        <PedidoDetalleModal
-          open={Boolean(this.state.pedido)}
-          pedido={this.state.pedido}
-          onClose={() => this.setState({ pedido: null })}
         />
       </div>
     )
