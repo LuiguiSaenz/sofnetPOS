@@ -165,7 +165,7 @@ class HomePage extends React.Component {
       curtime: new Date().toLocaleString(),
       token: JSON.parse(localStorage.getItem('user')),
       bodega: [{ id: 0, nombre: 'Cargando' }],
-      formapago: [{ id: 0, nombre: 'Cargando' }],
+      formaspago: [{ id: 0, nombre: 'Cargando' }],
       vendedores: [{ id: 0, nombre: 'Cargando' }],
       inputPago: '',
       anoreporte: new Date().getFullYear(),
@@ -243,7 +243,7 @@ class HomePage extends React.Component {
       if (value === 'simple' || value === 'agrupado') {
         this.setState({ arrayitems: [] })
       }
-    } 
+    }
     this.setState({ [name]: value })
   }
 
@@ -1693,18 +1693,13 @@ class HomePage extends React.Component {
       })
   }
 
-  getTipoPago(token) {
-    return fetch('http://api.softnet.cl/formaPago', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        token: token,
-      },
-    })
+  async getTipoPago(token) {
+    return fetch(
+      'https://us-west-2.aws.webhooks.mongodb-realm.com/api/client/v2.0/app/nupy-cfbnr/service/restaurant/incoming_webhook/web_ListFormasPago'
+    )
       .then(pago => pago.json())
       .then(pago => {
-        console.log(pago)
-        this.setState({ formapago: pago, inputPago: pago[0].id })
+        this.setState({ formaspago: JSON.parse(pago), inputPago: pago[0]._id })
       })
       .catch(error => {
         console.log(error)
@@ -2500,7 +2495,7 @@ class HomePage extends React.Component {
       // mesreporte,
       // reportediario,
       user,
-      formapago,
+      inputPago,
     } = this.state
 
     return (
@@ -2525,7 +2520,7 @@ class HomePage extends React.Component {
                 </Button>
                 <Button
                   size='sm'
-                  style={{marginLeft: 12}}
+                  style={{ marginLeft: 12 }}
                   variant={visualizacion === 'pedidos' ? 'success' : 'primary'}
                   onClick={() => {
                     this.setVisualizacion('pedidos')
@@ -2589,13 +2584,13 @@ class HomePage extends React.Component {
                                 Tipo de pago
                               </label>
                               <select
-                                className='form-control botontransparente'
-                                value={formapago}
+                                className='form-control dropdown-transparent'
+                                value={inputPago}
                                 onChange={this.handleTipoPago}
                               >
-                                {this.state.formapago.map(tipo => {
+                                {this.state.formaspago.map(tipo => {
                                   return (
-                                    <option key={tipo.id} value={tipo.id}>
+                                    <option key={tipo._id} value={tipo._id}>
                                       {tipo.nombre}
                                     </option>
                                   )
