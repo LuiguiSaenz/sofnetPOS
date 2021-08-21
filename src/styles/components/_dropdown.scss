@@ -7,12 +7,13 @@
 }
 .dropdown-transparent,
 .dropdown-transparent:focus{
-  background-color: transparent;
+  background-color: #0e202f;
   color: white;
   border: none;
   box-shadow: none;
   cursor: pointer;
   option{
+    background-color: white;
     color: black;
   }
 }

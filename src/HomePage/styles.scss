@@ -1,0 +1,19 @@
+.div-buttons{
+  .pagar{
+    margin-top: 70px;
+  }
+  .button-green{
+    width: 200px;
+    margin-top: 20px;
+    &.right{
+      margin-left: 50px;
+    }
+  }
+}
+.input-black,
+.input-black:focus{
+  color: white;
+  background-color: #0e202f;
+  border: none;
+  box-shadow: none;
+}

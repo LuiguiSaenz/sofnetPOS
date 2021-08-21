@@ -2,12 +2,13 @@
 import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import moment from 'moment'
-import './styles.scss'
-import '../../styles/app.scss'
-import { Dropdown, Table } from 'react-bootstrap'
-import PedidoDetalleModal from '../PedidoDetalleModal'
+import '../../styles.scss'
+import '../../../../styles/app.scss'
+import { Button, Table } from 'react-bootstrap'
+import PedidoDetalleModal from '../../pedido-detalle-modal'
 
-const SeccionPedidos = props => {
+const TablePedidos = props => {
+  const { state = 'generado' } = props
   const toastStyle = { position: toast.POSITION.BOTTOM_RIGHT }
   const [orders, setOrders] = useState([])
   const [orderSelected, setOrderSelected] = useState(null)
@@ -15,14 +16,13 @@ const SeccionPedidos = props => {
   const [ordersDate, setOrdersDate] = useState(moment().format('YYYY-MM-DD'))
   const [loadingOrders, setLoadingOrders] = useState(false)
   const user = JSON.parse(localStorage.getItem('user'))
-  const { onChangeVisualization: _handleChangeVisualization } = props
 
   const _handleGetOrders = async dateSelected => {
     setOrdersDate(dateSelected || '')
     if (dateSelected) {
       setLoadingOrders(true)
       return fetch(
-        `https://us-west-2.aws.webhooks.mongodb-realm.com/api/client/v2.0/app/nupy-cfbnr/service/restaurant/incoming_webhook/web_PedidosByPropietario?propietario=${user.rut}&fecha=${dateSelected}&estado=generado`
+        `https://us-west-2.aws.webhooks.mongodb-realm.com/api/client/v2.0/app/nupy-cfbnr/service/restaurant/incoming_webhook/web_PedidosByPropietario?propietario=${user.rut}&fecha=${dateSelected}&estado=${state}`
       )
         .then(res => res.json())
         .then(res => {
@@ -71,8 +71,11 @@ const SeccionPedidos = props => {
     }
   }, [orders])
 
-  const _handleSendOrder = async orderId => {
+  const _handleSendOrder = async () => {
     setLoadingOrders(true)
+    const orderId = orderSelected._id
+    setOrderSelected(null)
+    
     return fetch(
       `https://us-west-2.aws.webhooks.mongodb-realm.com/api/client/v2.0/app/nupy-cfbnr/service/restaurant/incoming_webhook/web_EntregarPedido`,
       {
@@ -95,11 +98,7 @@ const SeccionPedidos = props => {
   }
 
   return (
-    <div className='contener mt-4'>
-      <span onClick={() => _handleChangeVisualization('default')}>
-        <i className='fas fa-arrow-left'></i> Atrás
-      </span>
-
+    <div className='mt-4 div-table-pedidos'>
       <div className='cuadrobuscador'>
         <label className='form-control-label mb-2 date-label'>FECHA DE VISUALIZACIÓN:</label>
         <input
@@ -165,25 +164,30 @@ const SeccionPedidos = props => {
                             {Intl.NumberFormat(['ban', 'id']).format(order.Encabezado.MontoNeto)}
                           </td>
                           <td>
-                            <Dropdown>
-                              <Dropdown.Toggle
-                                className='no-caret'
-                                id='dropdown-basic'
-                                size='sm'
-                                variant='outline-primary'
-                              >
-                                <i class='fas fa-ellipsis-v'></i>
-                              </Dropdown.Toggle>
+                            <Button onClick={() => setOrderSelected(order)}>
+                              Ver Detalle
+                            </Button>
+                            {/*
+                              <Dropdown>
+                                <Dropdown.Toggle
+                                  className='no-caret'
+                                  id='dropdown-basic'
+                                  size='sm'
+                                  variant='outline-primary'
+                                >
+                                  <i class='fas fa-ellipsis-v'></i>
+                                </Dropdown.Toggle>
 
-                              <Dropdown.Menu>
-                                <Dropdown.Item onClick={() => setOrderSelected(order)}>
-                                  Ver detalle
-                                </Dropdown.Item>
-                                <Dropdown.Item onClick={() => _handleSendOrder(order._id)}>
-                                  Entregar
-                                </Dropdown.Item>
-                              </Dropdown.Menu>
-                            </Dropdown>
+                                <Dropdown.Menu>
+                                  <Dropdown.Item >
+                                    Ver detalle
+                                  </Dropdown.Item>
+                                  <Dropdown.Item onClick={() => _handleSendOrder(order._id)}>
+                                    Entregar
+                                  </Dropdown.Item>
+                                </Dropdown.Menu>
+                              </Dropdown>
+                            */}
                           </td>
                         </tr>
                       )
@@ -193,17 +197,19 @@ const SeccionPedidos = props => {
               </div>
             </div>
           ) : (
-            <h1 className='text-empty text-center'>Sin pedidos encontrados</h1>
+            <h1 className='text-empty text-center'>SIN PEDIDOS ENCONTRADOS</h1>
           )}
         </>
       )}
       <PedidoDetalleModal
         open={Boolean(orderSelected)}
         pedido={orderSelected}
+        state={state}
         onClose={() => setOrderSelected(null)}
+        onSendOrder={_handleSendOrder}
       />
     </div>
   )
 }
 
-export { SeccionPedidos }
+export { TablePedidos }

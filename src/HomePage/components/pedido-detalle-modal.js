@@ -2,7 +2,7 @@
 import { Button, Modal, Table } from 'react-bootstrap'
 import propTypes from 'prop-types'
 
-const PedidoDetalleModal = ({ onClose, open, pedido = {} }) => {
+const PedidoDetalleModal = ({ onClose, open, pedido = {}, onSendOrder:_handleSendOrder, state }) => {
   return (
     <Modal centered show={open} onHide={onClose}>
       <Modal.Header>
@@ -37,8 +37,13 @@ const PedidoDetalleModal = ({ onClose, open, pedido = {} }) => {
       </Modal.Body>
       <Modal.Footer>
         <Button variant='primary' onClick={onClose}>
-          Ok
+          Atrás
         </Button>
+        {state === 'generado' && (
+          <Button variant='success' onClick={_handleSendOrder}>
+            Entregar
+          </Button>
+        )}
       </Modal.Footer>
     </Modal>
   )
