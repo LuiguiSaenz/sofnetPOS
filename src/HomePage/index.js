@@ -2015,7 +2015,7 @@ class HomePage extends React.Component {
     // event.preventDefault();
 
     const selectedProducts = [...carrito].map( producto => {
-      const codigo = productos.findIndex(({nombre}) => nombre === producto.nombre)
+      const codigo = productos.find(({nombre}) => nombre === producto.nombre).codigo
       return {
         ...producto,
         codigo,
