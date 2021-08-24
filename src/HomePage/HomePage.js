@@ -1150,7 +1150,7 @@ class HomePage extends React.Component {
                   >
                     <option value=''>Seleccione</option>
                     <option value='simple'>Simple</option>
-                    {/* <option value='agrupado'>Agrupado</option> */}
+                    <option value='agrupado'>Agrupado</option>
                     <option value='variable'>Variable</option>
                   </select>
                 </div>
@@ -1541,7 +1541,7 @@ class HomePage extends React.Component {
     })
       .then(pros => pros.json())
       .then(pros => {
-        console.log(pros, 'productooooooooss')
+        console.log(pros)
         localStorage.setItem('productos', JSON.stringify(pros))
         this.setState({ productos: pros, loading: false })
       })
@@ -1633,71 +1633,27 @@ class HomePage extends React.Component {
 
   agregarComboACarrito(producto) {
     const { carrito } = this.state
-    console.log(producto, 'product')
+
     if (producto.tipo === 'simple') {
       const costo = producto.precio_oferta
         ? parseFloat(producto.precio_oferta)
         : parseFloat(producto.precio_regular)
 
-      carrito.push({
-        ...producto,
-        _id: producto._id.$oid,
+      const agregar = {
         nombre: producto.titulo,
         precio: costo,
         Precio: costo,
         codigo: 1,
         estado: 1,
         exento: '',
-      })
-      console.log(carrito, "carrito")
+      }
+      carrito.push(agregar)
+
       this.setState({ cargandoboleta: false, carrito, filter: '' })
       return localStorage.setItem('carrito', JSON.stringify(carrito))
-    } else {
-      const showModal = producto.opciones.find(({ opciones }) => opciones.length > 1)
-      if (showModal) {
-        this.setState({ seleccionvariable: producto })
-        return
-      }
-      const newOptions = producto.opciones.map(subProducto => ({
-        ...subProducto,
-        opciones: subProducto.opciones.map(option => ({
-          ...option,
-          cantidad: subProducto.cantidad,
-        })),
-      }))
-      this.setState({
-        carrito: [
-          ...carrito,
-          {
-            ...producto,
-            _id: producto._id.$oid,
-            opciones: newOptions,
-            nombre: producto.titulo,
-            precio: producto.precio_oferta ? producto.precio_oferta : producto.precio_regular,
-            detalle: newOptions,
-          },
-        ],
-        cargandoboleta: false,
-        filter: '',
-        seleccionvariable: false,
-      })
-      localStorage.setItem(
-        'carrito',
-        JSON.stringify([
-          ...carrito,
-          {
-            ...producto,
-            _id: producto._id.$oid,
-            opciones: newOptions,
-            nombre: producto.titulo,
-            precio: producto.precio_oferta ? producto.precio_oferta : producto.precio_regular,
-            detalle: newOptions,
-          },
-        ])
-      )
-    }
-    /*
-    else if (producto.tipo === 'agrupado') {
+    } else if (producto.tipo === 'variable') {
+      return this.setState({ seleccionvariable: producto })
+    } else if (producto.tipo === 'agrupado') {
       const costo = producto.precio_oferta
         ? parseFloat(producto.precio_oferta)
         : parseFloat(producto.precio_regular)
@@ -1715,7 +1671,6 @@ class HomePage extends React.Component {
       this.setState({ cargandoboleta: false, carrito, filter: '' })
       return localStorage.setItem('carrito', JSON.stringify(carrito))
     }
-    */
   }
 
   mostrarOpcionesProductoAgrupado() {
@@ -1792,10 +1747,10 @@ class HomePage extends React.Component {
 
     let errores = []
     // let sumar = 0
-    seleccionvariable.opciones.forEach(opcion => {
+    seleccionvariable.opciones.map(opcion => {
       const maximo = opcion.cantidad ? parseInt(opcion.cantidad) : 0
       let totalagregado = 0
-      opcion.opciones.forEach(item => {
+      opcion.opciones.map(item => {
         const qty = item.cantidad ? parseInt(item.cantidad) : 0
         totalagregado = totalagregado + qty
       })
@@ -1814,7 +1769,6 @@ class HomePage extends React.Component {
     localStorage.setItem('carrito', JSON.stringify(carrito))
   }
 
-  /*
   activar(pos, posdos, cantidad, titulo) {
     const { seleccionvariable } = this.state
 
@@ -1829,16 +1783,13 @@ class HomePage extends React.Component {
 
     return this.setState({ seleccionvariable })
   }
-  */
 
-  /*
   agregarCarrito(producto) {
     this.state.carrito.push(producto)
     this.setState({ cargandoboleta: false, carrito: this.state.carrito, filter: '' })
     // toast.success(`Agregaste ${producto.nombre} al carrito`, this.state.toaststyle)
     localStorage.setItem('carrito', JSON.stringify(this.state.carrito))
   }
-  */
 
   mostrarCarritoEditar() {
     if (this.state.carrito.length === 0) {
@@ -2013,31 +1964,30 @@ class HomePage extends React.Component {
   handleSubmit = async () => {
     let { carrito, /*formula, TipoDocumento,*/ productos } = this.state
     // event.preventDefault();
+    const carritotemporal = carrito.map(item => ({ ...item }))
+    const detalle = []
 
-    const selectedProducts = [...carrito].map( producto => {
-      const codigo = productos.findIndex(({nombre}) => nombre === producto.nombre)
-      return {
-        ...producto,
-        codigo,
-        estado: 1,
-        exento: '',
-        Descuento: '0',
-        Cantidad: '1',
-        Bodega: this.state.inputBodega,
-        Afecto: false,
-        Codigo: codigo,
-        Precio: Math.ceil(producto.precio / 1.19),
-        precio: Math.ceil(producto.precio / 1.19)
+    carritotemporal.map(p => {
+      const detalleproducto = productos.findIndex(pro => pro.nombre === p.nombre)
+      if (detalleproducto > -1) {
+        p.codigo = productos[detalleproducto].codigo
+        p.estado = 1
+        p.exento = ''
       }
+      detalle.push(p)
     })
 
-    console.log(selectedProducts, "miooooo")
-
-    let totalidad = selectedProducts.reduce((prev, cur) => prev + parseFloat(cur.precio), 0)
+    detalle.forEach(obj => (obj.Descuento = '0'))
+    detalle.forEach(obj => (obj.Cantidad = '1'))
+    detalle.forEach(obj => (obj.Bodega = this.state.inputBodega))
+    detalle.forEach(obj => (obj.Afecto = false))
+    detalle.forEach(obj => (obj.Codigo = obj.codigo))
+    detalle.forEach(obj => (obj.Precio = Math.ceil(obj.precio / 1.19)))
+    detalle.forEach(obj => (obj.precio = Math.ceil(obj.precio / 1.19)))
+    let totalidad = detalle.reduce((prev, cur) => prev + parseFloat(cur.precio), 0)
     let final = totalidad - (totalidad * parseInt(this.state.descuento)) / 100
     const { formaspago, inputAreaNegocio, inputPago, inputGrupo } = this.state
     const selectedPago = formaspago.find(({ _id }) => _id === inputPago)
-
     let enviarBoleta = [
       {
         Encabezado: {
@@ -2049,7 +1999,7 @@ class HomePage extends React.Component {
           Observacion: 'observacion',
           Direccion: 'santiago',
         },
-        Detalle: selectedProducts,
+        Detalle: detalle,
         Adicional: {
           Uno: selectedPago.code,
           Dos: this.user.rut,

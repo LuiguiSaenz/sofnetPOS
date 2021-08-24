@@ -50,7 +50,7 @@ const TablePedidos = props => {
   useEffect(() => {
     if (orders.length > 0) {
       const payments = orders.reduce((accPayments, order, index) => {
-        const payIndex = accPayments.findIndex(({ name }) => name === order.Adicional.Uno)
+        const payIndex = accPayments.findIndex(({ name }) => name === order.Adicional.Nueve)
         if (payIndex !== -1) {
           const pay = accPayments[payIndex]
           accPayments.splice(payIndex, 1, {
@@ -62,7 +62,7 @@ const TablePedidos = props => {
         }
 
         return accPayments.concat({
-          name: order.Adicional.Uno,
+          name: order.Adicional.Nueve,
           ordersQuantity: 1,
           totalNeto: order.Encabezado.MontoNeto || 0,
         })
@@ -147,7 +147,7 @@ const TablePedidos = props => {
                       <th>FOLIO</th>
                       <th>PRODUCTOS</th>
                       <th>FECHA</th>
-                      <th>DTE</th>
+                      {/* <th>DTE</th> */}
                       <th>NETO</th>
                       <th>ACCIONES</th>
                     </tr>
@@ -159,7 +159,7 @@ const TablePedidos = props => {
                           <td>{order.folio}</td>
                           <td>{order.Detalle.length}</td>
                           <td>{order.fecha}</td>
-                          <td>{order.Adicional.Uno}</td>
+                          {/*<td>{order.Adicional.Uno}</td> */}
                           <td>
                             {Intl.NumberFormat(['ban', 'id']).format(order.Encabezado.MontoNeto)}
                           </td>
