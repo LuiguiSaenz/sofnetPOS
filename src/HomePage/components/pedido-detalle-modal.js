@@ -7,7 +7,7 @@ const PedidoDetalleModal = ({
   onClose,
   open,
   pedido = {},
-  onSendOrder: _handleSendOrder,
+  onSendOrder: _handleSendOrder = () => {},
   state,
 }) => {
   return (
@@ -55,7 +55,7 @@ const PedidoDetalleModal = ({
                     )}
                   </td>
                   <td>{detalle.Cantidad}</td>
-                  <td>{detalle.precio}</td>
+                  <td>S/.{detalle.precio.$numberDouble || detalle.precio}</td>
                 </tr>
               )
             })}
