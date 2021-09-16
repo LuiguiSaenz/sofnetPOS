@@ -55,7 +55,7 @@ const DetalleCuadratura = props => {
   }, [cuadratura])
 
   useEffect(() => {
-    if (orders.length > 0) {
+    if (orders) {
       _handleGetPaymentTypes()
       _handleGetSimpleProducts()
       _handleGetVariableProducts()
@@ -193,7 +193,7 @@ const DetalleCuadratura = props => {
       .create({
         ...newForm,
         propietario: user.rut,
-        fecha_creacion: moment().format('YYYY-MM-DD HH:mm'),
+        fecha_creacion: moment().format('YYYY-MM-DD HH:mm:ss'),
       })
       .then(
         response => {
@@ -236,7 +236,7 @@ const DetalleCuadratura = props => {
       .close({
         ...closeForm,
         monto_banco: closeForm.banco_deposito ? closeForm.monto_banco : 0,
-        fecha_cierre: moment().format('YYYY-MM-DD HH:mm'),
+        fecha_cierre: moment().format('YYYY-MM-DD HH:mm:ss'),
         propietario: user.rut,
       })
       .then(
